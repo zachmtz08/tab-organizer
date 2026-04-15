@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tab Organizer</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="header">
+    <h1>Tab Organizer</h1>
+    <span id="tab-count" class="tab-count"></span>
+  </div>
+
+  <div class="toolbar">
+    <input id="search" type="text" placeholder="Search tabs..." autocomplete="off" />
+    <div class="toolbar-buttons">
+      <button id="btn-duplicates" title="Close duplicate tabs">Close Dupes</button>
+      <button id="btn-group" title="Toggle group by task in popup">View Groups</button>
+      <button id="btn-apply-groups" title="Create Chrome tab groups by task">Apply Groups</button>
+    </div>
+  </div>
+
+  <div id="tabs-container"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
