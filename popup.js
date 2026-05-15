@@ -16,6 +16,19 @@ const sessionNameInput = document.getElementById("session-name");
 const btnSaveConfirm = document.getElementById("btn-save-confirm");
 const btnSaveCancel = document.getElementById("btn-save-cancel");
 const btnSettings = document.getElementById("btn-settings");
+const staleBanner = document.getElementById("stale-banner");
+const staleBannerText = document.getElementById("stale-banner-text");
+const btnStaleReview = document.getElementById("btn-stale-review");
+const staleToolbar = document.getElementById("stale-toolbar");
+const staleInfoCount = document.getElementById("stale-info-count");
+const staleInfoSub = document.getElementById("stale-info-sub");
+const btnStaleSaveClose = document.getElementById("btn-stale-save-close");
+const btnStaleClose = document.getElementById("btn-stale-close");
+const btnStaleBack = document.getElementById("btn-stale-back");
+
+let staleMode = false;
+let tabAccessMap = {};
+let staleThresholdDays = 7;
 
 // ─── Task detection lives in tasks.js (shared with background.js) ────────────
 
@@ -26,13 +39,34 @@ function getQuery() {
 }
 
 function filterTabs(tabs) {
+  let result = tabs;
+  if (staleMode) result = result.filter(isStaleTab);
   const q = getQuery();
-  if (!q) return tabs;
-  return tabs.filter(
+  if (!q) return result;
+  return result.filter(
     (t) =>
       (t.title || "").toLowerCase().includes(q) ||
       (t.url || "").toLowerCase().includes(q)
   );
+}
+
+function isStaleTab(tab) {
+  if (tab.active) return false;
+  if (tab.pinned) return false;
+  if (!tab.url) return false;
+  if (tab.url.startsWith("chrome://")) return false;
+  if (tab.url.startsWith("chrome-extension://")) return false;
+  if (tab.url === "about:blank") return false;
+  const last = tabAccessMap[tab.id];
+  if (typeof last !== "number") return false;
+  return last < Date.now() - staleThresholdDays * 86400000;
+}
+
+function staleAgeLabel(tab) {
+  const last = tabAccessMap[tab.id];
+  if (typeof last !== "number") return "";
+  const days = Math.floor((Date.now() - last) / 86400000);
+  return `idle ${days}d`;
 }
 
 function getDomain(url) {
@@ -86,7 +120,8 @@ function createTabEl(tab) {
 
   const urlEl = document.createElement("div");
   urlEl.className = "tab-url";
-  urlEl.textContent = getDomain(tab.url);
+  const domain = getDomain(tab.url);
+  urlEl.textContent = staleMode ? `${domain} · ${staleAgeLabel(tab)}` : domain;
 
   info.appendChild(titleEl);
   info.appendChild(urlEl);
@@ -165,17 +200,81 @@ function renderGrouped(tabs) {
 
 function render() {
   container.innerHTML = "";
+  updateStaleBanner();
   const filtered = filterTabs(allTabs);
 
   if (filtered.length === 0) {
     const empty = document.createElement("div");
     empty.className = "empty-state";
-    empty.textContent = getQuery() ? "No tabs match your search." : "No tabs open.";
+    if (staleMode) empty.textContent = "No stale tabs left. Nice work.";
+    else if (getQuery()) empty.textContent = "No tabs match your search.";
+    else empty.textContent = "No tabs open.";
     container.appendChild(empty);
     return;
   }
 
   groupMode ? renderGrouped(filtered) : renderFlat(filtered);
+}
+
+function updateStaleBanner() {
+  if (sessionsMode || staleMode) {
+    staleBanner.classList.add("hidden");
+    return;
+  }
+  const stale = allTabs.filter(isStaleTab);
+  if (stale.length === 0) {
+    staleBanner.classList.add("hidden");
+    return;
+  }
+  staleBanner.classList.remove("hidden");
+  const word = stale.length === 1 ? "tab" : "tabs";
+  staleBannerText.textContent = `⏰ ${stale.length} ${word} idle ${staleThresholdDays}+ days`;
+}
+
+function enterStaleMode() {
+  if (sessionsMode) setSessionsMode(false);
+  staleMode = true;
+  staleToolbar.classList.remove("hidden");
+  const stale = allTabs.filter(isStaleTab);
+  const word = stale.length === 1 ? "tab" : "tabs";
+  staleInfoCount.textContent = `${stale.length} stale ${word}`;
+  staleInfoSub.textContent = `Idle ${staleThresholdDays}+ days`;
+  render();
+}
+
+function exitStaleMode() {
+  staleMode = false;
+  staleToolbar.classList.add("hidden");
+  render();
+}
+
+async function saveAndCloseStale() {
+  const stale = allTabs.filter(isStaleTab).filter(isSaveableTab);
+  if (stale.length === 0) return;
+  const sessions = await getSessions();
+  sessions.unshift({
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    name: `Stale tabs · ${new Date().toLocaleDateString()}`,
+    createdAt: Date.now(),
+    tabs: stale.map((t) => ({
+      url: t.url,
+      title: t.title || t.url,
+      favIconUrl: t.favIconUrl || null,
+    })),
+  });
+  await setSessions(sessions);
+  await chrome.tabs.remove(stale.map((t) => t.id));
+  exitStaleMode();
+  loadTabs();
+}
+
+async function justCloseStale() {
+  const stale = allTabs.filter(isStaleTab);
+  if (stale.length === 0) return;
+  if (!confirm(`Close ${stale.length} stale tabs without saving?`)) return;
+  await chrome.tabs.remove(stale.map((t) => t.id));
+  exitStaleMode();
+  loadTabs();
 }
 
 // ─── Apply Chrome Tab Groups ──────────────────────────────────────────────────
@@ -362,12 +461,14 @@ async function renderSessionsIfEmpty() {
 }
 
 function setSessionsMode(on) {
+  if (on && staleMode) exitStaleMode();
   sessionsMode = on;
   btnSessions.classList.toggle("active", sessionsMode);
   container.classList.toggle("hidden", sessionsMode);
   sessionsContainer.classList.toggle("hidden", !sessionsMode);
   searchInput.disabled = sessionsMode;
   searchInput.placeholder = sessionsMode ? "Search disabled in Sessions view" : "Search tabs...";
+  updateStaleBanner();
   if (sessionsMode) renderSessions();
 }
 
@@ -450,9 +551,22 @@ sessionNameInput.addEventListener("keydown", (e) => {
 
 btnSessions.addEventListener("click", () => setSessionsMode(!sessionsMode));
 
+btnStaleReview.addEventListener("click", enterStaleMode);
+btnStaleBack.addEventListener("click", exitStaleMode);
+btnStaleSaveClose.addEventListener("click", saveAndCloseStale);
+btnStaleClose.addEventListener("click", justCloseStale);
+
 searchInput.addEventListener("input", render);
 
+async function loadStaleData() {
+  const local = await chrome.storage.session.get("tabAccess");
+  tabAccessMap = local.tabAccess || {};
+  const sync = await chrome.storage.sync.get("staleThresholdDays");
+  const v = sync.staleThresholdDays;
+  staleThresholdDays = Number.isInteger(v) && v > 0 ? v : 7;
+}
+
 (async () => {
-  await loadCustomRules();
+  await Promise.all([loadCustomRules(), loadStaleData()]);
   await loadTabs();
 })();

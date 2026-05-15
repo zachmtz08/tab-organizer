@@ -34,6 +34,26 @@
     <button id="btn-save-cancel" title="Cancel">Cancel</button>
   </div>
 
+  <div id="stale-banner" class="stale-banner hidden">
+    <span class="stale-banner-text" id="stale-banner-text"></span>
+    <button id="btn-stale-review" class="stale-banner-btn">Review</button>
+  </div>
+
+  <div id="stale-toolbar" class="stale-toolbar hidden">
+    <div class="stale-info">
+      <span class="stale-info-emoji">⏰</span>
+      <div class="stale-info-text">
+        <strong id="stale-info-count"></strong>
+        <span id="stale-info-sub" class="stale-info-sub"></span>
+      </div>
+    </div>
+    <div class="stale-actions">
+      <button id="btn-stale-save-close" class="stale-primary" title="Save these as a session, then close them">Save &amp; Close</button>
+      <button id="btn-stale-close" title="Close without saving">Close All</button>
+      <button id="btn-stale-back" title="Exit stale review">Cancel</button>
+    </div>
+  </div>
+
   <div id="tabs-container"></div>
   <div id="sessions-container" class="hidden"></div>
 

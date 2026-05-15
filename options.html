@@ -35,6 +35,20 @@
     </section>
 
     <section class="card">
+      <h2>Stale tabs</h2>
+      <label class="number-label">
+        <span class="toggle-text">
+          <strong>Stale threshold</strong>
+          <span class="help">Tabs you haven't visited in this many days will show up in the popup banner with a one-click "Save &amp; Close" action. A red badge on the extension icon counts how many stale tabs you have.</span>
+        </span>
+        <div class="number-input">
+          <input id="stale-days" type="number" min="1" max="365" step="1" />
+          <span>days</span>
+        </div>
+      </label>
+    </section>
+
+    <section class="card">
       <h2>Add a rule</h2>
       <div class="form-grid">
         <label>

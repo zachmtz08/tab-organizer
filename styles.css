@@ -407,3 +407,87 @@ button.active {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* Stale tabs */
+.stale-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  margin: 8px 8px 0;
+  background: #2a1a1f;
+  border: 1px solid #5a2a32;
+  border-radius: 8px;
+}
+
+.stale-banner-text {
+  flex: 1;
+  font-size: 12px;
+  color: #ffb0b0;
+}
+
+.stale-banner-btn {
+  flex: 0 0 auto;
+  background: #c83248;
+  border-color: #c83248;
+  color: #fff;
+  padding: 5px 12px;
+  font-size: 12px;
+}
+
+.stale-banner-btn:hover {
+  background: #b02538;
+  border-color: #b02538;
+}
+
+.stale-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  margin: 8px 8px 0;
+  background: #1f1a22;
+  border: 1px solid #3a2a3e;
+  border-radius: 8px;
+}
+
+.stale-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stale-info-emoji {
+  font-size: 20px;
+}
+
+.stale-info-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.stale-info-text strong {
+  font-size: 13px;
+  color: #fff;
+}
+
+.stale-info-sub {
+  font-size: 11px;
+  color: #888;
+}
+
+.stale-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.stale-primary {
+  background: #5b5bf8;
+  border-color: #5b5bf8;
+  color: #fff;
+}
+
+.stale-primary:hover {
+  background: #4949e0;
+  border-color: #4949e0;
+}

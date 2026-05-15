@@ -1,5 +1,7 @@
 const KEY = "customRules";
 const AUTO_GROUP_KEY = "autoGroup";
+const STALE_DAYS_KEY = "staleThresholdDays";
+const DEFAULT_STALE_DAYS = 7;
 const COLORS = ["blue", "cyan", "green", "yellow", "orange", "red", "pink", "purple", "grey"];
 
 const els = {
@@ -12,6 +14,7 @@ const els = {
   list: document.getElementById("rules-list"),
   count: document.getElementById("rules-count"),
   autoGroup: document.getElementById("auto-group"),
+  staleDays: document.getElementById("stale-days"),
 };
 
 async function getRules() {
@@ -132,6 +135,22 @@ els.autoGroup.addEventListener("change", async () => {
   await chrome.storage.sync.set({ [AUTO_GROUP_KEY]: els.autoGroup.checked });
 });
 
+async function loadStaleDays() {
+  const data = await chrome.storage.sync.get(STALE_DAYS_KEY);
+  const v = data[STALE_DAYS_KEY];
+  els.staleDays.value = Number.isInteger(v) && v > 0 ? v : DEFAULT_STALE_DAYS;
+}
+
+els.staleDays.addEventListener("change", async () => {
+  const v = parseInt(els.staleDays.value, 10);
+  if (!Number.isInteger(v) || v < 1) {
+    els.staleDays.value = DEFAULT_STALE_DAYS;
+    await chrome.storage.sync.set({ [STALE_DAYS_KEY]: DEFAULT_STALE_DAYS });
+    return;
+  }
+  await chrome.storage.sync.set({ [STALE_DAYS_KEY]: v });
+});
+
 els.add.addEventListener("click", addRule);
 [els.pattern, els.name, els.emoji].forEach((input) => {
   input.addEventListener("keydown", (e) => {
@@ -140,4 +159,5 @@ els.add.addEventListener("click", addRule);
 });
 
 loadAutoGroup();
+loadStaleDays();
 render();

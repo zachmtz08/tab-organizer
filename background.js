@@ -1,10 +1,15 @@
 importScripts("tasks.js");
 
 const AUTO_GROUP_KEY = "autoGroup";
+const STALE_DAYS_KEY = "staleThresholdDays";
+const TAB_ACCESS_KEY = "tabAccess";
+const DEFAULT_STALE_DAYS = 7;
 const TAB_GROUP_ID_NONE = -1;
+const BADGE_ALARM = "stale-badge-refresh";
 
 let rulesLoaded = false;
 let autoGroupCache = null;
+let staleDaysCache = null;
 
 async function ensureRulesLoaded() {
   if (!rulesLoaded) {
@@ -21,11 +26,25 @@ async function getAutoGroupEnabled() {
   return autoGroupCache;
 }
 
+async function getStaleDays() {
+  if (staleDaysCache === null) {
+    const data = await chrome.storage.sync.get(STALE_DAYS_KEY);
+    const v = data[STALE_DAYS_KEY];
+    staleDaysCache = Number.isInteger(v) && v > 0 ? v : DEFAULT_STALE_DAYS;
+  }
+  return staleDaysCache;
+}
+
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== "sync") return;
   if (changes.customRules) rulesLoaded = false;
   if (changes[AUTO_GROUP_KEY]) {
     autoGroupCache = changes[AUTO_GROUP_KEY].newValue !== false;
+  }
+  if (changes[STALE_DAYS_KEY]) {
+    const v = changes[STALE_DAYS_KEY].newValue;
+    staleDaysCache = Number.isInteger(v) && v > 0 ? v : DEFAULT_STALE_DAYS;
+    updateBadge();
   }
 });
 
@@ -90,4 +109,130 @@ async function autoGroupTab(tab) {
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (!changeInfo.url) return; // only react when the URL itself changes
   autoGroupTab(tab);
+});
+
+// ─── Stale tab tracking ───────────────────────────────────────────────────────
+// Access timestamps live in chrome.storage.session: in-memory, survives SW
+// evictions, dies with the browser session (which is fine — tab IDs die with
+// the session too).
+
+let writeChain = Promise.resolve();
+function serialize(fn) {
+  const next = writeChain.then(fn, fn).catch(() => {});
+  writeChain = next;
+  return next;
+}
+
+async function getAccessMap() {
+  const data = await chrome.storage.session.get(TAB_ACCESS_KEY);
+  return data[TAB_ACCESS_KEY] || {};
+}
+
+async function setAccessMap(map) {
+  await chrome.storage.session.set({ [TAB_ACCESS_KEY]: map });
+}
+
+function recordAccess(tabId, when = Date.now()) {
+  return serialize(async () => {
+    const map = await getAccessMap();
+    map[tabId] = when;
+    await setAccessMap(map);
+  });
+}
+
+function clearAccess(tabId) {
+  return serialize(async () => {
+    const map = await getAccessMap();
+    if (tabId in map) {
+      delete map[tabId];
+      await setAccessMap(map);
+    }
+  });
+}
+
+async function sweepAccess() {
+  return serialize(async () => {
+    const map = await getAccessMap();
+    const tabs = await chrome.tabs.query({});
+    const validIds = new Set(tabs.map((t) => String(t.id)));
+    const now = Date.now();
+    let changed = false;
+
+    for (const id of Object.keys(map)) {
+      if (!validIds.has(id)) {
+        delete map[id];
+        changed = true;
+      }
+    }
+    for (const tab of tabs) {
+      if (!(tab.id in map)) {
+        map[tab.id] = typeof tab.lastAccessed === "number" ? tab.lastAccessed : now;
+        changed = true;
+      }
+    }
+    if (changed) await setAccessMap(map);
+  });
+}
+
+function isStaleCandidate(tab) {
+  if (!tab.url) return false;
+  if (tab.active) return false;
+  if (tab.pinned) return false;
+  if (tab.url.startsWith("chrome://")) return false;
+  if (tab.url.startsWith("chrome-extension://")) return false;
+  if (tab.url.startsWith("edge://")) return false;
+  if (tab.url.startsWith("about:")) return false;
+  return true;
+}
+
+async function countStaleTabs() {
+  const [map, tabs, days] = await Promise.all([
+    getAccessMap(),
+    chrome.tabs.query({}),
+    getStaleDays(),
+  ]);
+  const cutoff = Date.now() - days * 86400000;
+  let count = 0;
+  for (const tab of tabs) {
+    if (!isStaleCandidate(tab)) continue;
+    const last = map[tab.id];
+    if (typeof last === "number" && last < cutoff) count++;
+  }
+  return count;
+}
+
+async function updateBadge() {
+  const count = await countStaleTabs();
+  if (count > 0) {
+    await chrome.action.setBadgeText({ text: String(count) });
+    await chrome.action.setBadgeBackgroundColor({ color: "#c83232" });
+  } else {
+    await chrome.action.setBadgeText({ text: "" });
+  }
+}
+
+chrome.tabs.onActivated.addListener(({ tabId }) => {
+  recordAccess(tabId);
+});
+
+chrome.tabs.onCreated.addListener((tab) => {
+  recordAccess(tab.id);
+});
+
+chrome.tabs.onRemoved.addListener(async (tabId) => {
+  await clearAccess(tabId);
+  await updateBadge();
+});
+
+async function bootstrap() {
+  await sweepAccess();
+  await updateBadge();
+  await chrome.alarms.create(BADGE_ALARM, { periodInMinutes: 30 });
+}
+
+chrome.runtime.onStartup.addListener(bootstrap);
+chrome.runtime.onInstalled.addListener(bootstrap);
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === BADGE_ALARM) updateBadge();
 });
