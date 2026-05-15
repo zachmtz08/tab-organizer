@@ -52,12 +52,12 @@
       <h2>Add a rule</h2>
       <div class="form-grid">
         <label>
-          Pattern <span class="hint">regex, e.g. <code>internal\.mycompany\.com</code></span>
-          <input id="pattern" type="text" autocomplete="off" spellcheck="false" />
+          Pattern
+          <input id="pattern" type="text" autocomplete="off" spellcheck="false" placeholder="e.g. internal\.mycompany\.com" />
         </label>
         <label>
           Category name
-          <input id="name" type="text" autocomplete="off" maxlength="40" />
+          <input id="name" type="text" autocomplete="off" maxlength="40" placeholder="e.g. Work" />
         </label>
         <label>
           Color
@@ -74,8 +74,8 @@
           </select>
         </label>
         <label>
-          Emoji
-          <input id="emoji" type="text" maxlength="4" placeholder="📌" />
+          Emoji <span class="hint">optional</span>
+          <input id="emoji" type="text" maxlength="4" />
         </label>
       </div>
       <div class="actions">
