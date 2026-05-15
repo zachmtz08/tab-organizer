@@ -1,4 +1,5 @@
 const KEY = "customRules";
+const AUTO_GROUP_KEY = "autoGroup";
 const COLORS = ["blue", "cyan", "green", "yellow", "orange", "red", "pink", "purple", "grey"];
 
 const els = {
@@ -10,6 +11,7 @@ const els = {
   error: document.getElementById("error"),
   list: document.getElementById("rules-list"),
   count: document.getElementById("rules-count"),
+  autoGroup: document.getElementById("auto-group"),
 };
 
 async function getRules() {
@@ -121,6 +123,15 @@ async function addRule() {
   render();
 }
 
+async function loadAutoGroup() {
+  const data = await chrome.storage.sync.get(AUTO_GROUP_KEY);
+  els.autoGroup.checked = data[AUTO_GROUP_KEY] !== false; // default ON
+}
+
+els.autoGroup.addEventListener("change", async () => {
+  await chrome.storage.sync.set({ [AUTO_GROUP_KEY]: els.autoGroup.checked });
+});
+
 els.add.addEventListener("click", addRule);
 [els.pattern, els.name, els.emoji].forEach((input) => {
   input.addEventListener("keydown", (e) => {
@@ -128,4 +139,5 @@ els.add.addEventListener("click", addRule);
   });
 });
 
+loadAutoGroup();
 render();
