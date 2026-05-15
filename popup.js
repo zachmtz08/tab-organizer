@@ -1,12 +1,20 @@
 let allTabs = [];
 let groupMode = false;
+let sessionsMode = false;
 
 const container = document.getElementById("tabs-container");
+const sessionsContainer = document.getElementById("sessions-container");
 const searchInput = document.getElementById("search");
 const tabCountEl = document.getElementById("tab-count");
 const btnGroup = document.getElementById("btn-group");
 const btnApply = document.getElementById("btn-apply-groups");
 const btnDuplicates = document.getElementById("btn-duplicates");
+const btnSaveSession = document.getElementById("btn-save-session");
+const btnSessions = document.getElementById("btn-sessions");
+const saveForm = document.getElementById("save-form");
+const sessionNameInput = document.getElementById("session-name");
+const btnSaveConfirm = document.getElementById("btn-save-confirm");
+const btnSaveCancel = document.getElementById("btn-save-cancel");
 
 // ─── Task detection ───────────────────────────────────────────────────────────
 
@@ -320,6 +328,178 @@ async function applyChromGroups() {
   loadTabs();
 }
 
+// ─── Sessions ─────────────────────────────────────────────────────────────────
+
+const SESSIONS_KEY = "sessions";
+
+async function getSessions() {
+  const data = await chrome.storage.local.get(SESSIONS_KEY);
+  return Array.isArray(data[SESSIONS_KEY]) ? data[SESSIONS_KEY] : [];
+}
+
+async function setSessions(sessions) {
+  await chrome.storage.local.set({ [SESSIONS_KEY]: sessions });
+}
+
+function isSaveableTab(tab) {
+  if (!tab.url) return false;
+  if (tab.url.startsWith("chrome://")) return false;
+  if (tab.url.startsWith("chrome-extension://")) return false;
+  if (tab.url === "about:blank") return false;
+  return true;
+}
+
+async function saveSession(name) {
+  const trimmed = name.trim();
+  if (!trimmed) return false;
+
+  const tabsToSave = allTabs.filter(isSaveableTab).map((t) => ({
+    url: t.url,
+    title: t.title || t.url,
+    favIconUrl: t.favIconUrl || null,
+  }));
+
+  if (tabsToSave.length === 0) return false;
+
+  const sessions = await getSessions();
+  sessions.unshift({
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    name: trimmed,
+    createdAt: Date.now(),
+    tabs: tabsToSave,
+  });
+  await setSessions(sessions);
+  return true;
+}
+
+async function restoreSession(id) {
+  const sessions = await getSessions();
+  const session = sessions.find((s) => s.id === id);
+  if (!session) return;
+  await Promise.all(
+    session.tabs.map((t) => chrome.tabs.create({ url: t.url, active: false }))
+  );
+}
+
+async function deleteSession(id) {
+  const sessions = await getSessions();
+  await setSessions(sessions.filter((s) => s.id !== id));
+}
+
+function formatTimestamp(ts) {
+  const diff = Date.now() - ts;
+  const minute = 60_000;
+  const hour = 60 * minute;
+  const day = 24 * hour;
+  if (diff < minute) return "just now";
+  if (diff < hour) return `${Math.floor(diff / minute)}m ago`;
+  if (diff < day) return `${Math.floor(diff / hour)}h ago`;
+  if (diff < 7 * day) return `${Math.floor(diff / day)}d ago`;
+  return new Date(ts).toLocaleDateString();
+}
+
+function createSessionEl(session) {
+  const item = document.createElement("div");
+  item.className = "session-item";
+
+  const info = document.createElement("div");
+  info.className = "session-info";
+
+  const name = document.createElement("div");
+  name.className = "session-name";
+  name.textContent = session.name;
+
+  const meta = document.createElement("div");
+  meta.className = "session-meta";
+  const tabWord = session.tabs.length === 1 ? "tab" : "tabs";
+  meta.textContent = `${session.tabs.length} ${tabWord} · ${formatTimestamp(session.createdAt)}`;
+
+  info.appendChild(name);
+  info.appendChild(meta);
+
+  const restoreBtn = document.createElement("button");
+  restoreBtn.className = "session-restore";
+  restoreBtn.textContent = "Restore";
+  restoreBtn.title = "Open all tabs from this session";
+  restoreBtn.addEventListener("click", async (e) => {
+    e.stopPropagation();
+    restoreBtn.textContent = "Opening…";
+    restoreBtn.disabled = true;
+    await restoreSession(session.id);
+    window.close();
+  });
+
+  const deleteBtn = document.createElement("button");
+  deleteBtn.className = "session-delete";
+  deleteBtn.textContent = "×";
+  deleteBtn.title = "Delete this session";
+  deleteBtn.addEventListener("click", async (e) => {
+    e.stopPropagation();
+    if (!confirm(`Delete session "${session.name}"?`)) return;
+    await deleteSession(session.id);
+    item.remove();
+    renderSessionsIfEmpty();
+  });
+
+  item.appendChild(info);
+  item.appendChild(restoreBtn);
+  item.appendChild(deleteBtn);
+  return item;
+}
+
+async function renderSessions() {
+  sessionsContainer.innerHTML = "";
+  const sessions = await getSessions();
+  if (sessions.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "empty-state";
+    empty.textContent = "No saved sessions yet. Click 'Save Session' to capture your current tabs.";
+    sessionsContainer.appendChild(empty);
+    return;
+  }
+  sessions.forEach((s) => sessionsContainer.appendChild(createSessionEl(s)));
+}
+
+async function renderSessionsIfEmpty() {
+  if (sessionsContainer.children.length === 0 || !sessionsContainer.querySelector(".session-item")) {
+    await renderSessions();
+  }
+}
+
+function setSessionsMode(on) {
+  sessionsMode = on;
+  btnSessions.classList.toggle("active", sessionsMode);
+  container.classList.toggle("hidden", sessionsMode);
+  sessionsContainer.classList.toggle("hidden", !sessionsMode);
+  searchInput.disabled = sessionsMode;
+  searchInput.placeholder = sessionsMode ? "Search disabled in Sessions view" : "Search tabs...";
+  if (sessionsMode) renderSessions();
+}
+
+function openSaveForm() {
+  saveForm.classList.remove("hidden");
+  sessionNameInput.value = "";
+  sessionNameInput.focus();
+}
+
+function closeSaveForm() {
+  saveForm.classList.add("hidden");
+}
+
+async function handleSaveConfirm() {
+  const name = sessionNameInput.value;
+  const ok = await saveSession(name);
+  if (!ok) {
+    sessionNameInput.placeholder = "Need a name and at least one savable tab";
+    sessionNameInput.value = "";
+    return;
+  }
+  closeSaveForm();
+  btnSaveSession.textContent = "Saved!";
+  setTimeout(() => (btnSaveSession.textContent = "Save Session"), 1500);
+  if (sessionsMode) renderSessions();
+}
+
 // ─── Init ─────────────────────────────────────────────────────────────────────
 
 async function loadTabs() {
@@ -356,6 +536,16 @@ btnDuplicates.addEventListener("click", async () => {
   setTimeout(() => (btnDuplicates.textContent = "Close Dupes"), 1500);
   loadTabs();
 });
+
+btnSaveSession.addEventListener("click", openSaveForm);
+btnSaveCancel.addEventListener("click", closeSaveForm);
+btnSaveConfirm.addEventListener("click", handleSaveConfirm);
+sessionNameInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") handleSaveConfirm();
+  else if (e.key === "Escape") closeSaveForm();
+});
+
+btnSessions.addEventListener("click", () => setSessionsMode(!sessionsMode));
 
 searchInput.addEventListener("input", render);
 

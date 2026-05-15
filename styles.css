@@ -240,3 +240,144 @@ button.active {
   color: #444;
   font-size: 13px;
 }
+
+/* Utility */
+.hidden {
+  display: none !important;
+}
+
+/* Save session form */
+.save-form {
+  display: flex;
+  gap: 6px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #1e1e22;
+  background: #16161a;
+}
+
+.save-form input {
+  flex: 2;
+  background: #1e1e22;
+  border: 1px solid #2e2e34;
+  border-radius: 8px;
+  color: #e8e8e8;
+  font-size: 13px;
+  padding: 6px 10px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.save-form input:focus {
+  border-color: #5b5bf8;
+}
+
+.save-form input::placeholder {
+  color: #555;
+}
+
+.save-form button {
+  flex: 1;
+}
+
+#btn-save-confirm {
+  background: #5b5bf8;
+  border-color: #5b5bf8;
+  color: #fff;
+}
+
+#btn-save-confirm:hover {
+  background: #4949e0;
+}
+
+/* Sessions list */
+#sessions-container {
+  overflow-y: auto;
+  flex: 1;
+  padding: 8px 6px;
+}
+
+#sessions-container::-webkit-scrollbar {
+  width: 6px;
+}
+#sessions-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+#sessions-container::-webkit-scrollbar-thumb {
+  background: #2e2e34;
+  border-radius: 3px;
+}
+
+.session-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin: 4px 0;
+  background: #16161a;
+  border: 1px solid #1e1e22;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.session-item:hover {
+  background: #1a1a1f;
+  border-color: #2a2a32;
+}
+
+.session-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.session-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+
+.session-meta {
+  font-size: 11px;
+  color: #777;
+}
+
+.session-restore {
+  flex: 0 0 auto;
+  background: #1e1e2e;
+  border: 1px solid #2e2e44;
+  color: #c9c9ff;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.session-restore:hover {
+  background: #5b5bf8;
+  border-color: #5b5bf8;
+  color: #fff;
+}
+
+.session-delete {
+  flex: 0 0 auto;
+  background: none;
+  border: none;
+  color: #777;
+  font-size: 16px;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 5px;
+  width: auto;
+}
+
+.session-delete:hover {
+  color: #ff5f5f;
+  background: #2a1a1a;
+}
+
+#search:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

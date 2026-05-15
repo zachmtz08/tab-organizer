@@ -19,9 +19,20 @@
       <button id="btn-group" title="Toggle group by task in popup">View Groups</button>
       <button id="btn-apply-groups" title="Create Chrome tab groups by task">Apply Groups</button>
     </div>
+    <div class="toolbar-buttons">
+      <button id="btn-save-session" title="Save current tabs as a named session">Save Session</button>
+      <button id="btn-sessions" title="View saved sessions">Sessions</button>
+    </div>
+  </div>
+
+  <div id="save-form" class="save-form hidden">
+    <input id="session-name" type="text" placeholder="Session name…" autocomplete="off" maxlength="60" />
+    <button id="btn-save-confirm" title="Save">Save</button>
+    <button id="btn-save-cancel" title="Cancel">Cancel</button>
   </div>
 
   <div id="tabs-container"></div>
+  <div id="sessions-container" class="hidden"></div>
 
   <script src="popup.js"></script>
 </body>
