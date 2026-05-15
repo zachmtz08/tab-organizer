@@ -15,6 +15,9 @@ const saveForm = document.getElementById("save-form");
 const sessionNameInput = document.getElementById("session-name");
 const btnSaveConfirm = document.getElementById("btn-save-confirm");
 const btnSaveCancel = document.getElementById("btn-save-cancel");
+const btnSettings = document.getElementById("btn-settings");
+
+let customRules = [];
 
 // ─── Task detection ───────────────────────────────────────────────────────────
 
@@ -116,12 +119,33 @@ const OTHER_TASK = { name: "Other", color: "grey", emoji: "🌐" };
 function detectTask(tab) {
   const url = (tab.url || "").toLowerCase();
   const title = (tab.title || "").toLowerCase();
+
+  for (const rule of customRules) {
+    if (rule.regex.test(url) || rule.regex.test(title)) {
+      return { name: rule.name, color: rule.color, emoji: rule.emoji };
+    }
+  }
+
   for (const task of TASKS) {
     if (task.patterns.some((p) => p.test(url) || p.test(title))) {
       return task;
     }
   }
   return OTHER_TASK;
+}
+
+async function loadCustomRules() {
+  const data = await chrome.storage.sync.get("customRules");
+  const raw = Array.isArray(data.customRules) ? data.customRules : [];
+  customRules = raw
+    .map((r) => {
+      try {
+        return { ...r, regex: new RegExp(r.pattern, "i") };
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean);
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -508,6 +532,14 @@ async function loadTabs() {
   render();
 }
 
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "sync" && changes.customRules) {
+    loadCustomRules().then(render);
+  }
+});
+
+btnSettings.addEventListener("click", () => chrome.runtime.openOptionsPage());
+
 btnGroup.addEventListener("click", () => {
   groupMode = !groupMode;
   btnGroup.classList.toggle("active", groupMode);
@@ -549,4 +581,7 @@ btnSessions.addEventListener("click", () => setSessionsMode(!sessionsMode));
 
 searchInput.addEventListener("input", render);
 
-loadTabs();
+(async () => {
+  await loadCustomRules();
+  await loadTabs();
+})();

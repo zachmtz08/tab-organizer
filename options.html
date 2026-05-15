@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tab Organizer — Custom Categories</title>
+  <link rel="stylesheet" href="options.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Tab Organizer</h1>
+      <p class="subtitle">Custom Categories</p>
+    </header>
+
+    <section class="card">
+      <h2>How it works</h2>
+      <p>
+        Add your own URL or page-title patterns and Tab Organizer will bucket those
+        tabs into the category you choose. Custom rules are checked <strong>before</strong>
+        the built-in ones, so you can override them. Patterns use JavaScript regular
+        expressions, matched case-insensitively.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>Add a rule</h2>
+      <div class="form-grid">
+        <label>
+          Pattern <span class="hint">regex, e.g. <code>internal\.mycompany\.com</code></span>
+          <input id="pattern" type="text" autocomplete="off" spellcheck="false" />
+        </label>
+        <label>
+          Category name
+          <input id="name" type="text" autocomplete="off" maxlength="40" />
+        </label>
+        <label>
+          Color
+          <select id="color">
+            <option value="blue">Blue</option>
+            <option value="cyan">Cyan</option>
+            <option value="green">Green</option>
+            <option value="yellow">Yellow</option>
+            <option value="orange">Orange</option>
+            <option value="red">Red</option>
+            <option value="pink">Pink</option>
+            <option value="purple">Purple</option>
+            <option value="grey" selected>Grey</option>
+          </select>
+        </label>
+        <label>
+          Emoji
+          <input id="emoji" type="text" maxlength="4" placeholder="📌" />
+        </label>
+      </div>
+      <div class="actions">
+        <button id="add">Add rule</button>
+      </div>
+      <div id="error" class="error hidden"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Your rules</h2>
+        <span id="rules-count" class="muted"></span>
+      </div>
+      <div id="rules-list"></div>
+    </section>
+  </div>
+  <script src="options.js"></script>
+</body>
+</html>

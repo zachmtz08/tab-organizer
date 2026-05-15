@@ -37,6 +37,31 @@ body {
   border-radius: 99px;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon-btn {
+  flex: 0 0 auto;
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 15px;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+
+.icon-btn:hover {
+  background: #2a2a30;
+  color: #fff;
+}
+
 .toolbar {
   display: flex;
   flex-direction: column;
@@ -147,6 +172,7 @@ button.active {
 .group-header[data-color="green"]   { color: #4ecb71; border-color: #4ecb71; }
 .group-header[data-color="red"]     { color: #ff6b6b; border-color: #ff6b6b; }
 .group-header[data-color="orange"]  { color: #ffaa4d; border-color: #ffaa4d; }
+.group-header[data-color="yellow"]  { color: #ffd84d; border-color: #ffd84d; }
 .group-header[data-color="teal"]    { color: #4dd9c0; border-color: #4dd9c0; }
 .group-header[data-color="purple"]  { color: #b07fff; border-color: #b07fff; }
 .group-header[data-color="cyan"]    { color: #4dd9f5; border-color: #4dd9f5; }
