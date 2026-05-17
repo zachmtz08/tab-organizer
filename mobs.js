@@ -30,19 +30,29 @@ const MOBS = [
     `,
   },
   {
-    id: "creeper",
-    name: "Creeper",
-    viewBox: "0 0 10 12",
+    id: "bat",
+    name: "Bat",
+    viewBox: "0 0 14 9",
     body: `
-      <rect x="1" y="1" width="8" height="10" fill="#22c55e"/>
-      <rect x="1" y="1" width="1" height="10" fill="#15803d"/>
-      <rect x="8" y="1" width="1" height="10" fill="#15803d"/>
-      <rect x="2" y="3" width="2" height="2" fill="#0a0a0a"/>
-      <rect x="6" y="3" width="2" height="2" fill="#0a0a0a"/>
-      <rect x="4" y="6" width="2" height="2" fill="#0a0a0a"/>
-      <rect x="3" y="8" width="1" height="3" fill="#0a0a0a"/>
-      <rect x="6" y="8" width="1" height="3" fill="#0a0a0a"/>
-      <rect x="4" y="10" width="2" height="1" fill="#0a0a0a"/>
+      <rect x="0" y="3" width="2" height="2" fill="#581c87"/>
+      <rect x="1" y="2" width="3" height="3" fill="#581c87"/>
+      <rect x="2" y="5" width="2" height="1" fill="#581c87"/>
+      <rect x="12" y="3" width="2" height="2" fill="#581c87"/>
+      <rect x="10" y="2" width="3" height="3" fill="#581c87"/>
+      <rect x="10" y="5" width="2" height="1" fill="#581c87"/>
+      <rect x="5" y="0" width="1" height="1" fill="#6b21a8"/>
+      <rect x="8" y="0" width="1" height="1" fill="#6b21a8"/>
+      <rect x="4" y="1" width="2" height="1" fill="#6b21a8"/>
+      <rect x="8" y="1" width="2" height="1" fill="#6b21a8"/>
+      <rect x="4" y="2" width="6" height="1" fill="#6b21a8"/>
+      <rect x="3" y="3" width="8" height="1" fill="#6b21a8"/>
+      <rect x="4" y="4" width="6" height="2" fill="#6b21a8"/>
+      <rect x="5" y="6" width="4" height="1" fill="#6b21a8"/>
+      <rect x="6" y="7" width="2" height="1" fill="#6b21a8"/>
+      <rect x="4" y="3" width="1" height="1" fill="#ef4444"/>
+      <rect x="9" y="3" width="1" height="1" fill="#ef4444"/>
+      <rect x="5" y="5" width="1" height="1" fill="#fff"/>
+      <rect x="8" y="5" width="1" height="1" fill="#fff"/>
     `,
   },
   {
