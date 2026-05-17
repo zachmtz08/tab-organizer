@@ -17,6 +17,8 @@ const btnSaveConfirm = document.getElementById("btn-save-confirm");
 const btnSaveCancel = document.getElementById("btn-save-cancel");
 const btnSettings = document.getElementById("btn-settings");
 const btnTheme = document.getElementById("btn-theme");
+const btnParty = document.getElementById("btn-party");
+const partyFooter = document.getElementById("party-footer");
 const staleBanner = document.getElementById("stale-banner");
 const staleBannerText = document.getElementById("stale-banner-text");
 const btnStaleReview = document.getElementById("btn-stale-review");
@@ -570,6 +572,22 @@ btnTheme.addEventListener("click", async () => {
   await chrome.storage.sync.set({ theme: next });
 });
 
+async function loadParty() {
+  const data = await chrome.storage.sync.get("partyMode");
+  setParty(!!data.partyMode);
+}
+
+function setParty(on) {
+  partyFooter.classList.toggle("hidden", !on);
+  btnParty.classList.toggle("active", on);
+}
+
+btnParty.addEventListener("click", async () => {
+  const next = partyFooter.classList.contains("hidden");
+  setParty(next);
+  await chrome.storage.sync.set({ partyMode: next });
+});
+
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === "sync" && changes.theme) {
     applyTheme(changes.theme.newValue === "light" ? "light" : "dark");
@@ -592,6 +610,6 @@ async function loadStaleData() {
 }
 
 (async () => {
-  await Promise.all([loadTheme(), loadCustomRules(), loadStaleData()]);
+  await Promise.all([loadTheme(), loadParty(), loadCustomRules(), loadStaleData()]);
   await loadTabs();
 })();

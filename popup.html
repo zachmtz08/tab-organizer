@@ -11,6 +11,7 @@
     <h1>Tab Organizer</h1>
     <div class="header-actions">
       <span id="tab-count" class="tab-count"></span>
+      <button id="btn-party" class="icon-btn" title="Summon the pixel mob crew">👾</button>
       <button id="btn-theme" class="icon-btn" title="Toggle light/dark theme">🌙</button>
       <button id="btn-settings" class="icon-btn" title="Custom categories">⚙</button>
     </div>
@@ -57,6 +58,75 @@
 
   <div id="tabs-container"></div>
   <div id="sessions-container" class="hidden"></div>
+
+  <div id="party-footer" class="party-footer hidden">
+    <div class="mob mob-slime" title="Slime">
+      <svg viewBox="0 0 12 10" shape-rendering="crispEdges" aria-hidden="true">
+        <rect x="4" y="2" width="4" height="1" fill="#86efac"/>
+        <rect x="3" y="3" width="6" height="1" fill="#86efac"/>
+        <rect x="2" y="4" width="8" height="4" fill="#4ade80"/>
+        <rect x="3" y="5" width="1" height="1" fill="#0c1410"/>
+        <rect x="8" y="5" width="1" height="1" fill="#0c1410"/>
+        <rect x="4" y="7" width="4" height="1" fill="#15803d"/>
+        <rect x="1" y="8" width="10" height="1" fill="#16a34a"/>
+        <rect x="2" y="9" width="8" height="1" fill="#15803d"/>
+      </svg>
+    </div>
+    <div class="mob mob-ghost" title="Ghost">
+      <svg viewBox="0 0 10 12" shape-rendering="crispEdges" aria-hidden="true">
+        <rect x="2" y="1" width="6" height="1" fill="#e5e7eb"/>
+        <rect x="1" y="2" width="8" height="8" fill="#e5e7eb"/>
+        <rect x="3" y="4" width="1" height="2" fill="#0c0c14"/>
+        <rect x="6" y="4" width="1" height="2" fill="#0c0c14"/>
+        <rect x="4" y="7" width="2" height="1" fill="#f87171"/>
+        <rect x="1" y="10" width="2" height="2" fill="#e5e7eb"/>
+        <rect x="4" y="10" width="2" height="2" fill="#e5e7eb"/>
+        <rect x="7" y="10" width="2" height="2" fill="#e5e7eb"/>
+      </svg>
+    </div>
+    <div class="mob mob-creeper" title="Creeper">
+      <svg viewBox="0 0 10 12" shape-rendering="crispEdges" aria-hidden="true">
+        <rect x="1" y="1" width="8" height="10" fill="#22c55e"/>
+        <rect x="1" y="1" width="1" height="10" fill="#15803d"/>
+        <rect x="8" y="1" width="1" height="10" fill="#15803d"/>
+        <rect x="2" y="3" width="2" height="2" fill="#0a0a0a"/>
+        <rect x="6" y="3" width="2" height="2" fill="#0a0a0a"/>
+        <rect x="4" y="6" width="2" height="2" fill="#0a0a0a"/>
+        <rect x="3" y="8" width="1" height="3" fill="#0a0a0a"/>
+        <rect x="6" y="8" width="1" height="3" fill="#0a0a0a"/>
+        <rect x="4" y="10" width="2" height="1" fill="#0a0a0a"/>
+      </svg>
+    </div>
+    <div class="mob mob-robot" title="Robot">
+      <svg viewBox="0 0 10 12" shape-rendering="crispEdges" aria-hidden="true">
+        <rect x="3" y="1" width="4" height="3" fill="#cbd5e1"/>
+        <rect x="4" y="0" width="2" height="1" fill="#94a3b8"/>
+        <rect x="4" y="2" width="1" height="1" fill="#ef4444"/>
+        <rect x="6" y="2" width="1" height="1" fill="#ef4444"/>
+        <rect x="4" y="4" width="2" height="1" fill="#475569"/>
+        <rect x="2" y="5" width="6" height="5" fill="#94a3b8"/>
+        <rect x="1" y="6" width="1" height="3" fill="#cbd5e1"/>
+        <rect x="8" y="6" width="1" height="3" fill="#cbd5e1"/>
+        <rect x="3" y="10" width="1" height="2" fill="#64748b"/>
+        <rect x="6" y="10" width="1" height="2" fill="#64748b"/>
+      </svg>
+    </div>
+    <div class="mob mob-cat" title="Cat">
+      <svg viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true">
+        <rect x="2" y="2" width="2" height="2" fill="#fb923c"/>
+        <rect x="8" y="2" width="2" height="2" fill="#fb923c"/>
+        <rect x="2" y="4" width="8" height="3" fill="#fb923c"/>
+        <rect x="3" y="5" width="1" height="1" fill="#0c0c0c"/>
+        <rect x="8" y="5" width="1" height="1" fill="#0c0c0c"/>
+        <rect x="5" y="6" width="2" height="1" fill="#ec4899"/>
+        <rect x="3" y="7" width="6" height="4" fill="#fb923c"/>
+        <rect x="9" y="8" width="2" height="1" fill="#fb923c"/>
+        <rect x="10" y="6" width="1" height="2" fill="#fb923c"/>
+        <rect x="3" y="11" width="2" height="1" fill="#f97316"/>
+        <rect x="7" y="11" width="2" height="1" fill="#f97316"/>
+      </svg>
+    </div>
+  </div>
 
   <script src="tasks.js"></script>
   <script src="popup.js"></script>
