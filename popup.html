@@ -9,7 +9,12 @@
 <body>
   <div class="header">
     <h1>Tab Organizer</h1>
-    <span id="tab-count" class="tab-count"></span>
+    <div class="header-actions">
+      <span id="tab-count" class="tab-count"></span>
+      <button id="btn-party" class="icon-btn" title="Pick Google-page buddies">👾</button>
+      <button id="btn-theme" class="icon-btn" title="Toggle light/dark theme">🌙</button>
+      <button id="btn-settings" class="icon-btn" title="Custom categories">⚙</button>
+    </div>
   </div>
 
   <div class="toolbar">
@@ -19,10 +24,56 @@
       <button id="btn-group" title="Toggle group by task in popup">View Groups</button>
       <button id="btn-apply-groups" title="Create Chrome tab groups by task">Apply Groups</button>
     </div>
+    <div class="toolbar-buttons">
+      <button id="btn-save-session" title="Save current tabs as a named session">Save Session</button>
+      <button id="btn-sessions" title="View saved sessions">Sessions</button>
+    </div>
+  </div>
+
+  <div id="save-form" class="save-form hidden">
+    <input id="session-name" type="text" placeholder="Session name…" autocomplete="off" maxlength="60" />
+    <button id="btn-save-confirm" title="Save">Save</button>
+    <button id="btn-save-cancel" title="Cancel">Cancel</button>
+  </div>
+
+  <div id="stale-banner" class="stale-banner hidden">
+    <span class="stale-banner-text" id="stale-banner-text"></span>
+    <button id="btn-stale-review" class="stale-banner-btn">Review</button>
+  </div>
+
+  <div id="stale-toolbar" class="stale-toolbar hidden">
+    <div class="stale-info">
+      <span class="stale-info-emoji">⏰</span>
+      <div class="stale-info-text">
+        <strong id="stale-info-count"></strong>
+        <span id="stale-info-sub" class="stale-info-sub"></span>
+      </div>
+    </div>
+    <div class="stale-actions">
+      <button id="btn-stale-save-close" class="stale-primary" title="Save these as a session, then close them">Save &amp; Close</button>
+      <button id="btn-stale-close" title="Close without saving">Close All</button>
+      <button id="btn-stale-back" title="Exit stale review">Cancel</button>
+    </div>
   </div>
 
   <div id="tabs-container"></div>
+  <div id="sessions-container" class="hidden"></div>
 
+  <div id="mob-picker" class="mob-picker hidden">
+    <div class="picker-head">
+      <span class="picker-title">Pixel Buddies</span>
+      <span id="picker-count" class="picker-count"></span>
+    </div>
+    <p class="picker-hint">Pick your buddies — they hang out at the bottom of every page. Drag them around; they fall back to the floor. Per-site exceptions live in Settings.</p>
+    <div id="mob-grid" class="mob-grid"></div>
+    <button id="btn-dance" class="dance-btn" type="button">
+      <span class="dance-ball">🪩</span>
+      <span class="dance-label">Dance Mode</span>
+    </button>
+  </div>
+
+  <script src="mobs.js"></script>
+  <script src="tasks.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>
