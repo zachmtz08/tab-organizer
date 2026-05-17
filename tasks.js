@@ -190,28 +190,26 @@ async function loadCustomRules() {
   const raw = Array.isArray(data.customRules) ? data.customRules : [];
   customRules = raw
     .map((r) => {
-      // Rules created before the match-mode toggle existed are stored without
-      // a `match` field and were always treated as regex — keep that behavior
-      // so we don't silently change matching for anyone's existing rules.
-      const mode = r.match === "contains" ? "contains" : "regex";
-      if (mode === "regex") {
-        try {
-          return { ...r, mode, regex: new RegExp(r.pattern, "i") };
-        } catch {
-          return null;
-        }
+      if (!r || !r.pattern) return null;
+      // Try the pattern both as regex and as a plain substring — whichever
+      // hits at match-time wins. Pasting a raw URL works (substring match);
+      // explicit regex like ^github\.com$ also works (regex match). If the
+      // pattern can't compile as a regex, the substring path still works.
+      let regex = null;
+      try {
+        regex = new RegExp(r.pattern, "i");
+      } catch {
+        /* fall back to substring-only */
       }
-      return { ...r, mode, needle: (r.pattern || "").toLowerCase() };
+      return { ...r, regex, needle: r.pattern.toLowerCase() };
     })
     .filter(Boolean);
 }
 
 function ruleMatches(rule, url, title) {
-  if (rule.mode === "contains") {
-    if (!rule.needle) return false;
-    return url.includes(rule.needle) || title.includes(rule.needle);
-  }
-  return rule.regex.test(url) || rule.regex.test(title);
+  if (rule.regex && (rule.regex.test(url) || rule.regex.test(title))) return true;
+  if (rule.needle && (url.includes(rule.needle) || title.includes(rule.needle))) return true;
+  return false;
 }
 
 async function loadCustomGroups() {
