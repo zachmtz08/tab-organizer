@@ -18,7 +18,10 @@ const btnSaveCancel = document.getElementById("btn-save-cancel");
 const btnSettings = document.getElementById("btn-settings");
 const btnTheme = document.getElementById("btn-theme");
 const btnParty = document.getElementById("btn-party");
-const partyFooter = document.getElementById("party-footer");
+const mobPicker = document.getElementById("mob-picker");
+const mobGrid = document.getElementById("mob-grid");
+const pickerCountEl = document.getElementById("picker-count");
+const toolbar = document.querySelector(".toolbar");
 const staleBanner = document.getElementById("stale-banner");
 const staleBannerText = document.getElementById("stale-banner-text");
 const btnStaleReview = document.getElementById("btn-stale-review");
@@ -30,6 +33,8 @@ const btnStaleClose = document.getElementById("btn-stale-close");
 const btnStaleBack = document.getElementById("btn-stale-back");
 
 let staleMode = false;
+let pickerMode = false;
+let selectedMobs = [];
 let tabAccessMap = {};
 let staleThresholdDays = 7;
 
@@ -220,7 +225,7 @@ function render() {
 }
 
 function updateStaleBanner() {
-  if (sessionsMode || staleMode) {
+  if (sessionsMode || staleMode || pickerMode) {
     staleBanner.classList.add("hidden");
     return;
   }
@@ -236,6 +241,7 @@ function updateStaleBanner() {
 
 function enterStaleMode() {
   if (sessionsMode) setSessionsMode(false);
+  if (pickerMode) setPickerMode(false);
   staleMode = true;
   staleToolbar.classList.remove("hidden");
   const stale = allTabs.filter(isStaleTab);
@@ -465,6 +471,7 @@ async function renderSessionsIfEmpty() {
 
 function setSessionsMode(on) {
   if (on && staleMode) exitStaleMode();
+  if (on && pickerMode) setPickerMode(false);
   sessionsMode = on;
   btnSessions.classList.toggle("active", sessionsMode);
   container.classList.toggle("hidden", sessionsMode);
@@ -572,21 +579,64 @@ btnTheme.addEventListener("click", async () => {
   await chrome.storage.sync.set({ theme: next });
 });
 
-async function loadParty() {
-  const data = await chrome.storage.sync.get("partyMode");
-  setParty(!!data.partyMode);
+async function loadMobs() {
+  const data = await chrome.storage.sync.get("selectedMobs");
+  selectedMobs = Array.isArray(data.selectedMobs) ? data.selectedMobs : [];
+  renderMobGrid();
 }
 
-function setParty(on) {
-  partyFooter.classList.toggle("hidden", !on);
+function renderMobGrid() {
+  mobGrid.innerHTML = "";
+  MOBS.forEach((mob) => {
+    const isSelected = selectedMobs.includes(mob.id);
+    const tile = document.createElement("button");
+    tile.type = "button";
+    tile.className = "mob-tile" + (isSelected ? " selected" : "");
+    tile.dataset.id = mob.id;
+    tile.title = isSelected
+      ? `${mob.name} — in use on google.com (tap to remove)`
+      : `Pick ${mob.name}`;
+    tile.innerHTML =
+      `<div class="mob mob-${mob.id}">${mobSVG(mob)}</div>` +
+      `<span class="mob-tile-name">${mob.name}</span>`;
+    tile.addEventListener("click", () => toggleMob(mob.id));
+    mobGrid.appendChild(tile);
+  });
+  pickerCountEl.textContent = `${selectedMobs.length} / ${MAX_MOBS}`;
+  pickerCountEl.classList.toggle("at-max", selectedMobs.length >= MAX_MOBS);
+}
+
+async function toggleMob(id) {
+  const idx = selectedMobs.indexOf(id);
+  if (idx >= 0) {
+    selectedMobs.splice(idx, 1);
+  } else {
+    if (selectedMobs.length >= MAX_MOBS) {
+      pickerCountEl.classList.remove("flash");
+      void pickerCountEl.offsetWidth;
+      pickerCountEl.classList.add("flash");
+      return;
+    }
+    selectedMobs.push(id);
+  }
+  await chrome.storage.sync.set({ selectedMobs });
+  renderMobGrid();
+}
+
+function setPickerMode(on) {
+  if (on && sessionsMode) setSessionsMode(false);
+  if (on && staleMode) exitStaleMode();
+  if (on) closeSaveForm();
+  pickerMode = on;
   btnParty.classList.toggle("active", on);
+  mobPicker.classList.toggle("hidden", !on);
+  container.classList.toggle("hidden", on);
+  toolbar.classList.toggle("hidden", on);
+  updateStaleBanner();
+  if (on) renderMobGrid();
 }
 
-btnParty.addEventListener("click", async () => {
-  const next = partyFooter.classList.contains("hidden");
-  setParty(next);
-  await chrome.storage.sync.set({ partyMode: next });
-});
+btnParty.addEventListener("click", () => setPickerMode(!pickerMode));
 
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === "sync" && changes.theme) {
@@ -610,6 +660,15 @@ async function loadStaleData() {
 }
 
 (async () => {
-  await Promise.all([loadTheme(), loadParty(), loadCustomRules(), loadStaleData()]);
+  await Promise.all([loadTheme(), loadMobs(), loadCustomRules(), loadStaleData()]);
   await loadTabs();
 })();
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "sync" && changes.selectedMobs) {
+    selectedMobs = Array.isArray(changes.selectedMobs.newValue)
+      ? changes.selectedMobs.newValue
+      : [];
+    renderMobGrid();
+  }
+});

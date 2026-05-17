@@ -21,5 +21,13 @@
   "background": {
     "service_worker": "background.js"
   },
+  "content_scripts": [
+    {
+      "matches": ["*://www.google.com/*", "*://google.com/*"],
+      "js": ["mobs.js", "content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ],
   "options_page": "options.html"
 }

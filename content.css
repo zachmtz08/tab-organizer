@@ -1,0 +1,121 @@
+.tabsorg-mob-host {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 92px !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: flex-end !important;
+  gap: 38px !important;
+  padding-bottom: 10px !important;
+  z-index: 2147483647 !important;
+  pointer-events: none !important;
+  background: linear-gradient(to top, rgba(15, 15, 16, 0.5), transparent) !important;
+}
+
+.tabsorg-mob {
+  width: 56px !important;
+  height: 64px !important;
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: center !important;
+  flex: 0 0 auto !important;
+}
+
+.tabsorg-mob svg {
+  width: 100% !important;
+  height: 100% !important;
+  image-rendering: pixelated !important;
+  shape-rendering: crispEdges !important;
+}
+
+@keyframes tabsorg-slime-bounce {
+  0%, 100% { transform: scaleY(1) translateY(0); }
+  35% { transform: scaleY(0.6) scaleX(1.2) translateY(4px); }
+  55% { transform: scaleY(1.15) scaleX(0.9) translateY(-10px); }
+  75% { transform: scaleY(0.95) translateY(0); }
+}
+.tabsorg-mob-slime svg {
+  transform-origin: 50% 100% !important;
+  animation: tabsorg-slime-bounce 1.4s infinite ease-in-out !important;
+}
+
+@keyframes tabsorg-ghost-float {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-5px, -6px); }
+  50% { transform: translate(0, -10px) rotate(-3deg); }
+  75% { transform: translate(5px, -6px); }
+}
+.tabsorg-mob-ghost svg {
+  animation: tabsorg-ghost-float 2.6s infinite ease-in-out !important;
+}
+
+@keyframes tabsorg-creeper-shake {
+  0%, 80%, 100% { transform: translateY(0) rotate(0); }
+  82% { transform: translateY(-1px) rotate(-4deg); }
+  85% { transform: translateY(-1px) rotate(4deg); }
+  88% { transform: translateY(-1px) rotate(-4deg); }
+  91% { transform: translateY(-1px) rotate(4deg); }
+  94% { transform: translateY(-1px) rotate(-3deg); }
+  97% { transform: translateY(0) rotate(0); }
+}
+.tabsorg-mob-creeper svg {
+  transform-origin: 50% 100% !important;
+  animation: tabsorg-creeper-shake 3.2s infinite !important;
+}
+
+@keyframes tabsorg-robot-march {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-3px) rotate(2deg); }
+}
+.tabsorg-mob-robot svg {
+  transform-origin: 50% 100% !important;
+  animation: tabsorg-robot-march 0.7s infinite ease-in-out !important;
+}
+
+@keyframes tabsorg-cat-prance {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  20% { transform: translateY(-3px) rotate(-3deg); }
+  40% { transform: translateY(0) rotate(0); }
+  60% { transform: translateY(-3px) rotate(3deg); }
+  80% { transform: translateY(0) rotate(0); }
+}
+.tabsorg-mob-cat svg {
+  transform-origin: 50% 100% !important;
+  animation: tabsorg-cat-prance 1.8s infinite ease-in-out !important;
+}
+
+@keyframes tabsorg-pumpkin-wobble {
+  0%, 100% { transform: rotate(0) translateY(0); }
+  25% { transform: rotate(-6deg) translateY(-1px); }
+  50% { transform: rotate(0) translateY(-3px); }
+  75% { transform: rotate(6deg) translateY(-1px); }
+}
+.tabsorg-mob-pumpkin svg {
+  transform-origin: 50% 100% !important;
+  animation: tabsorg-pumpkin-wobble 2s infinite ease-in-out !important;
+}
+
+@keyframes tabsorg-bee-buzz {
+  0% { transform: translate(0, 0) rotate(-3deg); }
+  20% { transform: translate(4px, -8px) rotate(3deg); }
+  40% { transform: translate(0, -14px) rotate(-3deg); }
+  60% { transform: translate(-4px, -7px) rotate(3deg); }
+  80% { transform: translate(0, -3px) rotate(-3deg); }
+  100% { transform: translate(0, 0) rotate(-3deg); }
+}
+.tabsorg-mob-bee svg {
+  animation: tabsorg-bee-buzz 1.2s infinite ease-in-out !important;
+}
+
+@keyframes tabsorg-skeleton-sidestep {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  25% { transform: translateX(-4px) rotate(-3deg); }
+  50% { transform: translateX(0) rotate(0); }
+  75% { transform: translateX(4px) rotate(3deg); }
+}
+.tabsorg-mob-skeleton svg {
+  transform-origin: 50% 100% !important;
+  animation: tabsorg-skeleton-sidestep 1.6s infinite ease-in-out !important;
+}

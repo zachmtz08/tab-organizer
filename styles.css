@@ -630,22 +630,114 @@ button.active {
   color: #fff;
 }
 
-/* ─── Pixel-mob party footer ─────────────────────────────────────────── */
-.party-footer {
+/* ─── Pixel-mob picker ───────────────────────────────────────────────── */
+.mob-picker {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 14px 18px;
+}
+
+.picker-head {
   display: flex;
-  justify-content: space-around;
-  align-items: flex-end;
-  gap: 4px;
-  padding: 10px 12px 8px;
-  border-top: 1px solid var(--border);
-  background: var(--bg-party);
-  height: 64px;
-  overflow: hidden;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.picker-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-strong);
+  letter-spacing: 0.2px;
+}
+
+.picker-count {
+  font-size: 11px;
+  background: var(--bg-tag);
+  color: var(--text-faint);
+  padding: 2px 8px;
+  border-radius: 99px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.picker-count.at-max {
+  color: var(--accent-text);
+}
+
+@keyframes picker-flash {
+  0%, 100% { background: var(--bg-tag); color: var(--text-faint); }
+  50% { background: var(--danger); color: #fff; }
+}
+
+.picker-count.flash {
+  animation: picker-flash 0.45s ease-out;
+}
+
+.picker-hint {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+.mob-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.mob-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 10px 4px 7px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+  transition: background 0.15s, border-color 0.15s, opacity 0.2s, transform 0.1s;
+}
+
+.mob-tile:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.mob-tile.selected {
+  opacity: 0.42;
+  border-color: var(--accent);
+  background: var(--bg-active-tab);
+}
+
+.mob-tile.selected::after {
+  content: "✓";
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 10px;
+  color: var(--accent);
+  font-weight: 700;
+  opacity: 0.9;
+}
+
+.mob-tile:hover.selected {
+  transform: none;
+}
+
+.mob-tile-name {
+  font-size: 10px;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .mob {
-  width: 38px;
-  height: 44px;
+  width: 36px;
+  height: 42px;
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -713,4 +805,37 @@ button.active {
 .mob-cat svg {
   transform-origin: 50% 100%;
   animation: cat-prance 1.8s infinite ease-in-out;
+}
+
+@keyframes pumpkin-wobble {
+  0%, 100% { transform: rotate(0) translateY(0); }
+  25% { transform: rotate(-6deg) translateY(-1px); }
+  50% { transform: rotate(0) translateY(-2px); }
+  75% { transform: rotate(6deg) translateY(-1px); }
+}
+.mob-pumpkin svg {
+  transform-origin: 50% 100%;
+  animation: pumpkin-wobble 2s infinite ease-in-out;
+}
+
+@keyframes bee-buzz {
+  0% { transform: translate(0, 0) rotate(-3deg); }
+  25% { transform: translate(2px, -4px) rotate(3deg); }
+  50% { transform: translate(0, -6px) rotate(-3deg); }
+  75% { transform: translate(-2px, -3px) rotate(3deg); }
+  100% { transform: translate(0, 0) rotate(-3deg); }
+}
+.mob-bee svg {
+  animation: bee-buzz 1.2s infinite ease-in-out;
+}
+
+@keyframes skeleton-sidestep {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  25% { transform: translateX(-2px) rotate(-3deg); }
+  50% { transform: translateX(0) rotate(0); }
+  75% { transform: translateX(2px) rotate(3deg); }
+}
+.mob-skeleton svg {
+  transform-origin: 50% 100%;
+  animation: skeleton-sidestep 1.6s infinite ease-in-out;
 }
