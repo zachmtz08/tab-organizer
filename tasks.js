@@ -213,7 +213,7 @@ async function loadActiveGroups() {
   }
 }
 
-function isBuiltInTaskActive(name) {
+function isGroupActive(name) {
   return !activeGroupSet || activeGroupSet.has(name);
 }
 
@@ -236,13 +236,17 @@ function detectTask(tab) {
   const title = (tab.title || "").toLowerCase();
 
   for (const rule of customRules) {
-    if (rule.regex.test(url) || rule.regex.test(title)) {
-      return resolveRuleGroup(rule) || OTHER_TASK;
-    }
+    if (!(rule.regex.test(url) || rule.regex.test(title))) continue;
+    // Skip rules whose target group has been turned off — let detection
+    // fall through to subsequent rules or built-ins.
+    if (rule.groupName && !isGroupActive(rule.groupName)) continue;
+    if (!rule.groupName && rule.name && !isGroupActive(rule.name)) continue;
+    const resolved = resolveRuleGroup(rule);
+    if (resolved) return resolved;
   }
 
   for (const task of BUILT_IN_TASKS) {
-    if (!isBuiltInTaskActive(task.name)) continue;
+    if (!isGroupActive(task.name)) continue;
     if (task.patterns.some((p) => p.test(url) || p.test(title))) {
       return task;
     }

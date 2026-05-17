@@ -184,9 +184,16 @@ async function renderGroups() {
           const all = await getCustomGroupsList();
           all.splice(idx, 1);
           await setCustomGroupsList(all);
+          const activeData = await chrome.storage.sync.get("activeGroups");
+          if (Array.isArray(activeData.activeGroups)) {
+            const active = new Set(activeData.activeGroups);
+            active.delete(g.name);
+            await chrome.storage.sync.set({ activeGroups: Array.from(active) });
+          }
           await populateRuleGroupDropdown();
           render();
           renderGroups();
+          renderActiveGrid();
         })
       );
     });
@@ -218,8 +225,19 @@ async function addGroup() {
     emoji,
   });
   await setCustomGroupsList(existing);
+
+  // If the active-groups list has been explicitly materialized, add this
+  // new group so it doesn't silently start out disabled.
+  const activeData = await chrome.storage.sync.get("activeGroups");
+  if (Array.isArray(activeData.activeGroups)) {
+    const active = new Set(activeData.activeGroups);
+    active.add(name);
+    await chrome.storage.sync.set({ activeGroups: Array.from(active) });
+  }
+
   clearGroupForm();
   renderGroups();
+  renderActiveGrid();
   render();
 }
 
@@ -413,41 +431,56 @@ els.blockInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") addBlockPattern();
 });
 
-async function getActiveGroupNames() {
-  const data = await chrome.storage.sync.get("activeGroups");
-  if (Array.isArray(data.activeGroups)) return new Set(data.activeGroups);
-  return new Set(BUILT_IN_TASKS.map((t) => t.name));
-}
-
 async function setActiveGroupNames(set) {
   await chrome.storage.sync.set({ activeGroups: Array.from(set) });
 }
 
 async function renderActiveGrid() {
-  const active = await getActiveGroupNames();
+  const [active, customGroupsList] = await Promise.all([
+    getActiveGroupNames(),
+    getCustomGroupsList(),
+  ]);
   els.activeGrid.innerHTML = "";
-  BUILT_IN_TASKS.forEach((task) => {
-    const isActive = active.has(task.name);
+
+  const all = [
+    ...BUILT_IN_TASKS.map((t) => ({ name: t.name, color: t.color, emoji: t.emoji, source: "built-in" })),
+    ...customGroupsList.map((g) => ({ name: g.name, color: g.color, emoji: g.emoji || "📌", source: "custom" })),
+  ];
+
+  all.forEach((entry) => {
+    const isActive = active.has(entry.name);
     const tile = document.createElement("button");
     tile.type = "button";
     tile.className = "active-tile" + (isActive ? " selected" : "");
-    tile.dataset.color = task.color;
+    tile.dataset.color = entry.color;
     tile.title = isActive
-      ? `${task.name} — in use (tap to disable)`
-      : `Activate ${task.name}`;
+      ? `${entry.name} — in use (tap to disable)`
+      : `Activate ${entry.name}`;
+    const customBadge = entry.source === "custom" ? ' <span class="active-tile-badge">custom</span>' : "";
     tile.innerHTML =
-      `<span class="active-tile-emoji">${task.emoji}</span>` +
-      `<span class="active-tile-name">${task.name}</span>`;
+      `<span class="active-tile-emoji">${entry.emoji}</span>` +
+      `<span class="active-tile-name">${entry.name}${customBadge}</span>`;
     tile.addEventListener("click", async () => {
       const current = await getActiveGroupNames();
-      if (current.has(task.name)) current.delete(task.name);
-      else current.add(task.name);
+      if (current.has(entry.name)) current.delete(entry.name);
+      else current.add(entry.name);
       await setActiveGroupNames(current);
       renderActiveGrid();
     });
     els.activeGrid.appendChild(tile);
   });
-  els.activeCount.textContent = `${active.size} / ${BUILT_IN_TASKS.length} active`;
+
+  els.activeCount.textContent = `${active.size} / ${all.length} active`;
+}
+
+async function getActiveGroupNames() {
+  const data = await chrome.storage.sync.get("activeGroups");
+  if (Array.isArray(data.activeGroups)) return new Set(data.activeGroups);
+  const customGroupsList = await getCustomGroupsList();
+  return new Set([
+    ...BUILT_IN_TASKS.map((t) => t.name),
+    ...customGroupsList.map((g) => g.name),
+  ]);
 }
 
 loadTheme();

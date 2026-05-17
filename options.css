@@ -413,6 +413,20 @@ select:focus {
   color: var(--text-strong);
 }
 
+.active-tile-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  background: var(--bg-tag);
+  color: var(--text-faint);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  border-radius: 99px;
+  vertical-align: middle;
+}
+
 input[type="text"]::placeholder {
   color: var(--text-fainter);
 }
