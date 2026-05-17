@@ -8,23 +8,46 @@
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 680px; margin: 60px auto; padding: 0 20px; color: #222; line-height: 1.7; }
     h1 { font-size: 24px; } h2 { font-size: 17px; margin-top: 32px; }
     p { margin: 8px 0; } a { color: #5b5bf8; }
+    code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.92em; background: #f2f2f5; padding: 1px 5px; border-radius: 3px; }
+    ul { padding-left: 22px; }
+    li { margin: 4px 0; }
   </style>
 </head>
 <body>
   <h1>Tab Organizer – Privacy Policy</h1>
-  <p><strong>Last updated:</strong> April 15, 2026</p>
+  <p><strong>Last updated:</strong> May 17, 2026</p>
 
   <h2>What data does this extension access?</h2>
-  <p>Tab Organizer reads the <strong>title and URL</strong> of your open browser tabs in order to display and group them by task category.</p>
+  <p>Tab Organizer reads the <strong>title and URL</strong> of your open browser tabs in order to display them in the popup, group them by task category, and detect stale tabs you haven't visited recently.</p>
 
-  <h2>Is any data collected or sent anywhere?</h2>
-  <p><strong>No.</strong> Tab Organizer does not collect, store, transmit, or share any data. All processing happens locally in your browser. No data ever leaves your device.</p>
+  <h2>What data is stored, and where?</h2>
+  <p>Everything is stored <strong>locally on your device</strong>. Nothing is uploaded, transmitted, or shared with any server.</p>
+  <ul>
+    <li><strong>Saved sessions</strong> (named groups of tabs you saved manually) — stored in <code>chrome.storage.local</code>. Stays on this device.</li>
+    <li><strong>Your settings</strong> — custom grouping rules, custom categories, theme, stale-tab threshold, pixel-buddy selection, and per-site blocklist — stored in <code>chrome.storage.sync</code>. Chrome may sync this between your own browsers if you're signed into a Google account with sync enabled. Tab Organizer itself never sees that sync traffic — Google handles it.</li>
+    <li><strong>Per-tab last-access timestamps</strong>, used to compute the stale-tab badge — stored in <code>chrome.storage.session</code>. This is in-memory only and disappears when you close Chrome.</li>
+  </ul>
 
-  <h2>Does this extension use cookies or tracking?</h2>
-  <p>No. There are no cookies, analytics, or tracking of any kind.</p>
+  <h2>Page-content access</h2>
+  <p>Tab Organizer injects a small visual overlay (the optional "pixel buddies") onto web pages you visit. The overlay <strong>does not read, modify, or transmit any content from the page</strong> — it only draws decorative sprites in the corner. You can disable it on any site via Settings → Pixel buddies blocklist.</p>
+
+  <h2>Is any data collected or sent to a server?</h2>
+  <p><strong>No.</strong> Tab Organizer has no backend. It makes no network requests to the developer or any third party. All logic runs entirely inside your browser.</p>
+
+  <h2>Does this extension use cookies, analytics, or tracking?</h2>
+  <p>No. There are no cookies, no analytics, no telemetry, and no tracking of any kind.</p>
 
   <h2>Third-party services</h2>
   <p>This extension does not use any third-party services, APIs, or SDKs.</p>
+
+  <h2>Permissions explained</h2>
+  <ul>
+    <li><code>tabs</code> — read tab titles and URLs to display, search, and group them.</li>
+    <li><code>tabGroups</code> — create and color Chrome's native tab groups.</li>
+    <li><code>storage</code> — save your sessions, rules, and settings locally (see above).</li>
+    <li><code>alarms</code> — run a periodic background check to keep the stale-tab badge up to date.</li>
+    <li>Host access to <code>&lt;all_urls&gt;</code> — required to render the optional pixel-buddies overlay on the pages you visit. No page content is read or sent anywhere.</li>
+  </ul>
 
   <h2>Changes to this policy</h2>
   <p>If this policy changes, the updated version will be posted here with a new date.</p>
@@ -33,3 +56,5 @@
   <p>Questions? Open an issue at <a href="https://github.com/zachmtz08/tab-organizer">github.com/zachmtz08/tab-organizer</a>.</p>
 </body>
 </html>
+</content>
+</invoke>
