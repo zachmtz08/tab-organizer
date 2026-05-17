@@ -89,6 +89,10 @@ function getFaviconUrl(tab) {
   if (tab.favIconUrl && !tab.favIconUrl.startsWith("chrome://")) {
     return tab.favIconUrl;
   }
+  if (!tab.url) return null;
+  if (tab.url.startsWith("chrome://")) return null;
+  if (tab.url.startsWith("chrome-extension://")) return null;
+  if (tab.url.startsWith("about:")) return null;
   try {
     return `${new URL(tab.url).origin}/favicon.ico`;
   } catch {
