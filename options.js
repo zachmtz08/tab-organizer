@@ -16,6 +16,8 @@ const els = {
   autoGroup: document.getElementById("auto-group"),
   staleDays: document.getElementById("stale-days"),
   theme: document.getElementById("btn-theme-options"),
+  mobBlocklist: document.getElementById("mob-blocklist"),
+  saveBlocklist: document.getElementById("btn-save-blocklist"),
 };
 
 async function loadTheme() {
@@ -182,7 +184,26 @@ els.add.addEventListener("click", addRule);
   });
 });
 
+async function loadBlocklist() {
+  const data = await chrome.storage.sync.get("mobBlocklist");
+  const list = Array.isArray(data.mobBlocklist) ? data.mobBlocklist : [];
+  els.mobBlocklist.value = list.join("\n");
+}
+
+async function saveBlocklist() {
+  const lines = els.mobBlocklist.value
+    .split(/\r?\n/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  await chrome.storage.sync.set({ mobBlocklist: lines });
+  els.saveBlocklist.textContent = "Saved";
+  setTimeout(() => (els.saveBlocklist.textContent = "Save blocklist"), 1200);
+}
+
+els.saveBlocklist.addEventListener("click", saveBlocklist);
+
 loadTheme();
 loadAutoGroup();
 loadStaleDays();
+loadBlocklist();
 render();

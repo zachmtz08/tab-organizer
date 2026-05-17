@@ -38,6 +38,18 @@
     </section>
 
     <section class="card">
+      <h2>Pixel buddies</h2>
+      <p style="margin-bottom: 14px;">
+        Block your pixel mob crew from specific sites. One pattern per line — match by hostname.
+        Use <code>*</code> as a wildcard, e.g. <code>mail.google.com</code> or <code>*.banking.com</code>.
+      </p>
+      <textarea id="mob-blocklist" rows="5" placeholder="mail.google.com&#10;*.banking.com&#10;docs.google.com"></textarea>
+      <div class="actions" style="margin-top: 10px;">
+        <button id="btn-save-blocklist">Save blocklist</button>
+      </div>
+    </section>
+
+    <section class="card">
       <h2>Stale tabs</h2>
       <label class="number-label">
         <span class="toggle-text">

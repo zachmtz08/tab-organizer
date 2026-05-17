@@ -3,24 +3,39 @@
   bottom: 0 !important;
   left: 0 !important;
   right: 0 !important;
-  height: 92px !important;
+  height: 64px !important;
   display: flex !important;
   justify-content: center !important;
   align-items: flex-end !important;
-  gap: 38px !important;
-  padding-bottom: 10px !important;
+  gap: 24px !important;
+  padding-bottom: 6px !important;
   z-index: 2147483647 !important;
   pointer-events: none !important;
-  background: linear-gradient(to top, rgba(15, 15, 16, 0.5), transparent) !important;
+  background: transparent !important;
 }
 
 .tabsorg-mob {
-  width: 56px !important;
-  height: 64px !important;
+  width: 40px !important;
+  height: 48px !important;
   display: flex !important;
   align-items: flex-end !important;
   justify-content: center !important;
   flex: 0 0 auto !important;
+  pointer-events: auto !important;
+  cursor: grab !important;
+  touch-action: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  will-change: transform !important;
+}
+
+.tabsorg-mob.tabsorg-dragging {
+  cursor: grabbing !important;
+  filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.35)) !important;
+}
+
+.tabsorg-mob.tabsorg-dragging svg {
+  animation-play-state: paused !important;
 }
 
 .tabsorg-mob svg {

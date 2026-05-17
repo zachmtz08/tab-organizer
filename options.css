@@ -237,8 +237,28 @@ select {
 }
 
 input[type="text"]:focus,
-select:focus {
+select:focus,
+textarea:focus {
   border-color: var(--accent);
+}
+
+textarea {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 13px;
+  padding: 10px 12px;
+  outline: none;
+  resize: vertical;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  line-height: 1.5;
+  transition: border-color 0.15s;
+}
+
+textarea::placeholder {
+  color: var(--text-fainter);
 }
 
 input[type="text"]::placeholder {
