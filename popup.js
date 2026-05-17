@@ -16,6 +16,7 @@ const sessionNameInput = document.getElementById("session-name");
 const btnSaveConfirm = document.getElementById("btn-save-confirm");
 const btnSaveCancel = document.getElementById("btn-save-cancel");
 const btnSettings = document.getElementById("btn-settings");
+const btnTheme = document.getElementById("btn-theme");
 const staleBanner = document.getElementById("stale-banner");
 const staleBannerText = document.getElementById("stale-banner-text");
 const btnStaleReview = document.getElementById("btn-stale-review");
@@ -551,6 +552,30 @@ sessionNameInput.addEventListener("keydown", (e) => {
 
 btnSessions.addEventListener("click", () => setSessionsMode(!sessionsMode));
 
+async function loadTheme() {
+  const data = await chrome.storage.sync.get("theme");
+  applyTheme(data.theme === "light" ? "light" : "dark");
+}
+
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  btnTheme.textContent = theme === "light" ? "🌙" : "☀️";
+  btnTheme.title = theme === "light" ? "Switch to dark theme" : "Switch to light theme";
+}
+
+btnTheme.addEventListener("click", async () => {
+  const current = document.documentElement.dataset.theme || "dark";
+  const next = current === "dark" ? "light" : "dark";
+  applyTheme(next);
+  await chrome.storage.sync.set({ theme: next });
+});
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "sync" && changes.theme) {
+    applyTheme(changes.theme.newValue === "light" ? "light" : "dark");
+  }
+});
+
 btnStaleReview.addEventListener("click", enterStaleMode);
 btnStaleBack.addEventListener("click", exitStaleMode);
 btnStaleSaveClose.addEventListener("click", saveAndCloseStale);
@@ -567,6 +592,6 @@ async function loadStaleData() {
 }
 
 (async () => {
-  await Promise.all([loadCustomRules(), loadStaleData()]);
+  await Promise.all([loadTheme(), loadCustomRules(), loadStaleData()]);
   await loadTabs();
 })();

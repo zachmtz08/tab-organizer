@@ -15,7 +15,31 @@ const els = {
   count: document.getElementById("rules-count"),
   autoGroup: document.getElementById("auto-group"),
   staleDays: document.getElementById("stale-days"),
+  theme: document.getElementById("btn-theme-options"),
 };
+
+async function loadTheme() {
+  const data = await chrome.storage.sync.get("theme");
+  applyTheme(data.theme === "light" ? "light" : "dark");
+}
+
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  els.theme.textContent = theme === "light" ? "🌙" : "☀️";
+}
+
+els.theme.addEventListener("click", async () => {
+  const current = document.documentElement.dataset.theme || "dark";
+  const next = current === "dark" ? "light" : "dark";
+  applyTheme(next);
+  await chrome.storage.sync.set({ theme: next });
+});
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "sync" && changes.theme) {
+    applyTheme(changes.theme.newValue === "light" ? "light" : "dark");
+  }
+});
 
 async function getRules() {
   const data = await chrome.storage.sync.get(KEY);
@@ -158,6 +182,7 @@ els.add.addEventListener("click", addRule);
   });
 });
 
+loadTheme();
 loadAutoGroup();
 loadStaleDays();
 render();
