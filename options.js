@@ -6,13 +6,18 @@ const COLORS = ["blue", "cyan", "green", "yellow", "orange", "red", "pink", "pur
 
 const els = {
   pattern: document.getElementById("pattern"),
-  name: document.getElementById("name"),
-  color: document.getElementById("color"),
-  emoji: document.getElementById("emoji"),
+  ruleGroup: document.getElementById("rule-group"),
   add: document.getElementById("add"),
   error: document.getElementById("error"),
   list: document.getElementById("rules-list"),
   count: document.getElementById("rules-count"),
+  groupName: document.getElementById("group-name"),
+  groupColor: document.getElementById("group-color"),
+  groupEmoji: document.getElementById("group-emoji"),
+  addGroup: document.getElementById("btn-add-group"),
+  groupsList: document.getElementById("groups-list"),
+  groupsCount: document.getElementById("groups-count"),
+  groupError: document.getElementById("group-error"),
   autoGroup: document.getElementById("auto-group"),
   staleDays: document.getElementById("stale-days"),
   theme: document.getElementById("btn-theme-options"),
@@ -68,25 +73,170 @@ function clearError() {
 
 function clearForm() {
   els.pattern.value = "";
-  els.name.value = "";
-  els.emoji.value = "";
-  els.color.value = "grey";
   els.pattern.focus();
 }
 
-function makeRuleEl(rule) {
+function showGroupError(msg) {
+  els.groupError.textContent = msg;
+  els.groupError.classList.remove("hidden");
+}
+
+function clearGroupError() {
+  els.groupError.textContent = "";
+  els.groupError.classList.add("hidden");
+}
+
+function clearGroupForm() {
+  els.groupName.value = "";
+  els.groupEmoji.value = "";
+  els.groupColor.value = "grey";
+  els.groupName.focus();
+}
+
+async function getCustomGroupsList() {
+  const data = await chrome.storage.sync.get("customGroups");
+  return Array.isArray(data.customGroups) ? data.customGroups : [];
+}
+
+async function setCustomGroupsList(list) {
+  await chrome.storage.sync.set({ customGroups: list });
+}
+
+function resolveRuleDisplay(rule, customGroupsList) {
+  if (rule.groupName) {
+    const custom = customGroupsList.find((g) => g.name === rule.groupName);
+    if (custom) return custom;
+    const builtin = BUILT_IN_TASKS.find((t) => t.name === rule.groupName);
+    if (builtin) return { name: builtin.name, color: builtin.color, emoji: builtin.emoji };
+    return { name: rule.groupName, color: "grey", emoji: "📌", orphaned: true };
+  }
+  if (rule.name) return { name: rule.name, color: rule.color, emoji: rule.emoji || "📌" };
+  return { name: "?", color: "grey", emoji: "❓" };
+}
+
+async function populateRuleGroupDropdown() {
+  const customGroupsList = await getCustomGroupsList();
+  els.ruleGroup.innerHTML = "";
+
+  const builtinOG = document.createElement("optgroup");
+  builtinOG.label = "Built-in categories";
+  BUILT_IN_TASKS.forEach((task) => {
+    const opt = document.createElement("option");
+    opt.value = task.name;
+    opt.textContent = `${task.emoji} ${task.name}`;
+    builtinOG.appendChild(opt);
+  });
+  els.ruleGroup.appendChild(builtinOG);
+
+  if (customGroupsList.length > 0) {
+    const customOG = document.createElement("optgroup");
+    customOG.label = "Your groups";
+    customGroupsList.forEach((g) => {
+      const opt = document.createElement("option");
+      opt.value = g.name;
+      opt.textContent = `${g.emoji || "📌"} ${g.name}`;
+      customOG.appendChild(opt);
+    });
+    els.ruleGroup.appendChild(customOG);
+  }
+}
+
+function makeGroupEl(group, onDelete) {
+  const row = document.createElement("div");
+  row.className = "group-item";
+  row.dataset.color = group.color;
+
+  const meta = document.createElement("div");
+  meta.className = "group-meta";
+  const emoji = document.createElement("span");
+  emoji.className = "group-item-emoji";
+  emoji.textContent = group.emoji || "📌";
+  const name = document.createElement("span");
+  name.className = "group-item-name";
+  name.textContent = group.name;
+  meta.appendChild(emoji);
+  meta.appendChild(name);
+
+  const del = document.createElement("button");
+  del.className = "del";
+  del.textContent = "Delete";
+  del.addEventListener("click", onDelete);
+
+  row.appendChild(meta);
+  row.appendChild(del);
+  return row;
+}
+
+async function renderGroups() {
+  const list = await getCustomGroupsList();
+  els.groupsCount.textContent = `${list.length} ${list.length === 1 ? "group" : "groups"}`;
+  els.groupsList.innerHTML = "";
+  if (list.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "empty";
+    empty.textContent = "No custom groups yet. Add one above to use in rules.";
+    els.groupsList.appendChild(empty);
+  } else {
+    list.forEach((g, idx) => {
+      els.groupsList.appendChild(
+        makeGroupEl(g, async () => {
+          if (!confirm(`Delete group "${g.name}"? Rules referencing it will fall back to Other.`)) return;
+          const all = await getCustomGroupsList();
+          all.splice(idx, 1);
+          await setCustomGroupsList(all);
+          await populateRuleGroupDropdown();
+          render();
+          renderGroups();
+        })
+      );
+    });
+  }
+  await populateRuleGroupDropdown();
+}
+
+async function addGroup() {
+  clearGroupError();
+  const name = els.groupName.value.trim();
+  const color = els.groupColor.value;
+  const emoji = els.groupEmoji.value.trim() || "📌";
+
+  if (!name) return showGroupError("Name is required.");
+  if (!COLORS.includes(color)) return showGroupError("Pick a valid color.");
+
+  const existing = await getCustomGroupsList();
+  if (existing.some((g) => g.name.toLowerCase() === name.toLowerCase())) {
+    return showGroupError("A group with that name already exists.");
+  }
+  if (BUILT_IN_TASKS.some((t) => t.name.toLowerCase() === name.toLowerCase())) {
+    return showGroupError("That name collides with a built-in category. Pick another.");
+  }
+
+  existing.push({
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    name,
+    color,
+    emoji,
+  });
+  await setCustomGroupsList(existing);
+  clearGroupForm();
+  renderGroups();
+  render();
+}
+
+function makeRuleEl(rule, customGroupsList) {
+  const info = resolveRuleDisplay(rule, customGroupsList);
   const row = document.createElement("div");
   row.className = "rule";
-  row.dataset.color = rule.color;
+  row.dataset.color = info.color;
 
   const meta = document.createElement("div");
   meta.className = "rule-meta";
   const emoji = document.createElement("span");
   emoji.className = "rule-emoji";
-  emoji.textContent = rule.emoji;
+  emoji.textContent = info.emoji;
   const name = document.createElement("span");
   name.className = "rule-name";
-  name.textContent = rule.name;
+  name.textContent = info.name + (info.orphaned ? " (deleted)" : "");
   meta.appendChild(emoji);
   meta.appendChild(name);
 
@@ -98,7 +248,7 @@ function makeRuleEl(rule) {
   del.className = "del";
   del.textContent = "Delete";
   del.addEventListener("click", async () => {
-    if (!confirm(`Delete rule for "${rule.name}"?`)) return;
+    if (!confirm(`Delete rule for "${info.name}"?`)) return;
     const all = await getRules();
     await setRules(all.filter((r) => r.id !== rule.id));
     render();
@@ -111,7 +261,10 @@ function makeRuleEl(rule) {
 }
 
 async function render() {
-  const rules = await getRules();
+  const [rules, customGroupsList] = await Promise.all([
+    getRules(),
+    getCustomGroupsList(),
+  ]);
   els.count.textContent = `${rules.length} ${rules.length === 1 ? "rule" : "rules"}`;
   els.list.innerHTML = "";
 
@@ -123,19 +276,16 @@ async function render() {
     return;
   }
 
-  rules.forEach((rule) => els.list.appendChild(makeRuleEl(rule)));
+  rules.forEach((rule) => els.list.appendChild(makeRuleEl(rule, customGroupsList)));
 }
 
 async function addRule() {
   clearError();
   const pattern = els.pattern.value.trim();
-  const name = els.name.value.trim();
-  const color = els.color.value;
-  const emoji = els.emoji.value.trim() || "📌";
+  const groupName = els.ruleGroup.value;
 
   if (!pattern) return showError("Pattern is required.");
-  if (!name) return showError("Category name is required.");
-  if (!COLORS.includes(color)) return showError("Pick a valid color.");
+  if (!groupName) return showError("Pick a category.");
 
   try {
     new RegExp(pattern, "i");
@@ -147,9 +297,7 @@ async function addRule() {
   rules.push({
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     pattern,
-    name,
-    color,
-    emoji,
+    groupName,
   });
   await setRules(rules);
   clearForm();
@@ -182,9 +330,14 @@ els.staleDays.addEventListener("change", async () => {
 });
 
 els.add.addEventListener("click", addRule);
-[els.pattern, els.name, els.emoji].forEach((input) => {
+els.pattern.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") addRule();
+});
+
+els.addGroup.addEventListener("click", addGroup);
+[els.groupName, els.groupEmoji].forEach((input) => {
   input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") addRule();
+    if (e.key === "Enter") addGroup();
   });
 });
 
@@ -302,4 +455,5 @@ loadAutoGroup();
 loadStaleDays();
 renderBlocklist();
 renderActiveGrid();
+renderGroups();
 render();

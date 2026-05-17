@@ -182,6 +182,7 @@ function normalizeGroupColor(c) {
 }
 
 var customRules = [];
+var customGroups = [];
 var activeGroupSet = null; // null = all active by default
 
 async function loadCustomRules() {
@@ -198,6 +199,11 @@ async function loadCustomRules() {
     .filter(Boolean);
 }
 
+async function loadCustomGroups() {
+  const data = await chrome.storage.sync.get("customGroups");
+  customGroups = Array.isArray(data.customGroups) ? data.customGroups : [];
+}
+
 async function loadActiveGroups() {
   const data = await chrome.storage.sync.get("activeGroups");
   if (Array.isArray(data.activeGroups)) {
@@ -211,13 +217,27 @@ function isBuiltInTaskActive(name) {
   return !activeGroupSet || activeGroupSet.has(name);
 }
 
+function resolveRuleGroup(rule) {
+  // New shape: rule references a group by name.
+  if (rule.groupName) {
+    const custom = customGroups.find((g) => g.name === rule.groupName);
+    if (custom) return { name: custom.name, color: custom.color, emoji: custom.emoji };
+    const builtin = BUILT_IN_TASKS.find((t) => t.name === rule.groupName);
+    if (builtin) return { name: builtin.name, color: builtin.color, emoji: builtin.emoji };
+    return null; // orphaned: caller decides fallback
+  }
+  // Legacy shape: rule carries name/color/emoji inline.
+  if (rule.name) return { name: rule.name, color: rule.color, emoji: rule.emoji };
+  return null;
+}
+
 function detectTask(tab) {
   const url = (tab.url || "").toLowerCase();
   const title = (tab.title || "").toLowerCase();
 
   for (const rule of customRules) {
     if (rule.regex.test(url) || rule.regex.test(title)) {
-      return { name: rule.name, color: rule.color, emoji: rule.emoji };
+      return resolveRuleGroup(rule) || OTHER_TASK;
     }
   }
 
@@ -233,9 +253,11 @@ function detectTask(tab) {
 function knownGroupTitles() {
   const titles = new Set();
   titles.add(`${OTHER_TASK.emoji} ${OTHER_TASK.name}`);
-  // Include ALL built-ins (even deactivated ones) so we can still re-evaluate
-  // tabs sitting in a now-disabled category's group.
   for (const t of BUILT_IN_TASKS) titles.add(`${t.emoji} ${t.name}`);
-  for (const r of customRules) titles.add(`${r.emoji} ${r.name}`);
+  for (const g of customGroups) titles.add(`${g.emoji} ${g.name}`);
+  // Legacy: rules with inline emoji/name.
+  for (const r of customRules) {
+    if (r.name && r.emoji) titles.add(`${r.emoji} ${r.name}`);
+  }
   return titles;
 }

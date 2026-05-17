@@ -79,19 +79,21 @@
     </section>
 
     <section class="card">
-      <h2>Add a rule</h2>
-      <div class="form-grid">
+      <div class="card-head">
+        <h2>Custom groups</h2>
+        <span id="groups-count" class="muted"></span>
+      </div>
+      <p style="margin-bottom: 14px;">
+        Your own categories. Pick a name, color, and emoji — once added, you can attach matching rules to them below.
+      </p>
+      <div class="form-grid group-form-grid">
         <label>
-          Pattern
-          <input id="pattern" type="text" autocomplete="off" spellcheck="false" placeholder="e.g. internal\.mycompany\.com" />
-        </label>
-        <label>
-          Category name
-          <input id="name" type="text" autocomplete="off" maxlength="40" placeholder="e.g. Work" />
+          Name
+          <input id="group-name" type="text" autocomplete="off" maxlength="40" placeholder="e.g. Work" />
         </label>
         <label>
           Color
-          <select id="color">
+          <select id="group-color">
             <option value="blue">Blue</option>
             <option value="cyan">Cyan</option>
             <option value="green">Green</option>
@@ -105,7 +107,26 @@
         </label>
         <label>
           Emoji
-          <input id="emoji" type="text" maxlength="4" placeholder="optional" />
+          <input id="group-emoji" type="text" maxlength="4" placeholder="optional" />
+        </label>
+      </div>
+      <div class="actions">
+        <button id="btn-add-group">Add group</button>
+      </div>
+      <div id="group-error" class="error hidden"></div>
+      <div id="groups-list" class="groups-list" style="margin-top: 14px;"></div>
+    </section>
+
+    <section class="card">
+      <h2>Add a rule</h2>
+      <div class="form-grid rule-form-grid">
+        <label>
+          Pattern
+          <input id="pattern" type="text" autocomplete="off" spellcheck="false" placeholder="e.g. internal\.mycompany\.com" />
+        </label>
+        <label>
+          Category
+          <select id="rule-group"></select>
         </label>
       </div>
       <div class="actions">

@@ -24,6 +24,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 async function ensureRulesLoaded() {
   if (!rulesLoaded) {
     await loadCustomRules();
+    await loadCustomGroups();
     await loadActiveGroups();
     rulesLoaded = true;
   }
@@ -48,7 +49,7 @@ async function getStaleDays() {
 
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== "sync") return;
-  if (changes.customRules || changes.activeGroups) rulesLoaded = false;
+  if (changes.customRules || changes.customGroups || changes.activeGroups) rulesLoaded = false;
   if (changes[AUTO_GROUP_KEY]) {
     autoGroupCache = changes[AUTO_GROUP_KEY].newValue !== false;
   }
