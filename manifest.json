@@ -5,17 +5,17 @@
   "description": "Organize, search, group, and manage your Chrome tabs.",
   "permissions": ["tabs", "tabGroups"],
   "icons": {
-    "16": "icons/icon16.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
+    "16": "icons/angry-16.png",
+    "48": "icons/angry-48.png",
+    "128": "icons/angry-128.png"
   },
   "action": {
     "default_popup": "popup.html",
     "default_title": "Tab Organizer",
     "default_icon": {
-      "16": "icons/icon16.png",
-      "48": "icons/icon48.png",
-      "128": "icons/icon128.png"
+      "16": "icons/angry-16.png",
+      "48": "icons/angry-48.png",
+      "128": "icons/angry-128.png"
     }
   },
   "background": {
