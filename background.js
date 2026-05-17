@@ -14,6 +14,7 @@ let staleDaysCache = null;
 async function ensureRulesLoaded() {
   if (!rulesLoaded) {
     await loadCustomRules();
+    await loadActiveGroups();
     rulesLoaded = true;
   }
 }
@@ -37,7 +38,7 @@ async function getStaleDays() {
 
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== "sync") return;
-  if (changes.customRules) rulesLoaded = false;
+  if (changes.customRules || changes.activeGroups) rulesLoaded = false;
   if (changes[AUTO_GROUP_KEY]) {
     autoGroupCache = changes[AUTO_GROUP_KEY].newValue !== false;
   }
@@ -73,7 +74,8 @@ async function autoGroupTab(tab) {
 
   await ensureRulesLoaded();
   const task = detectTask(tab);
-  if (task === OTHER_TASK) return;
+  const desiredTitle = `${task.emoji} ${task.name}`;
+  const color = normalizeGroupColor(task.color);
 
   await withWindowLock(tab.windowId, async () => {
     let current;
@@ -83,12 +85,20 @@ async function autoGroupTab(tab) {
       return; // tab closed
     }
 
-    // Leave grouped tabs alone — only touch ungrouped ones, so we never
-    // override a manual group the user set up.
-    if (current.groupId !== TAB_GROUP_ID_NONE) return;
-
-    const desiredTitle = `${task.emoji} ${task.name}`;
-    const color = normalizeGroupColor(task.color);
+    if (current.groupId !== TAB_GROUP_ID_NONE) {
+      // Already grouped. Only move it if it's in one of OUR groups and
+      // belongs somewhere else now. Manual groups are left alone.
+      let currentGroup;
+      try {
+        currentGroup = await chrome.tabGroups.get(current.groupId);
+      } catch {
+        return;
+      }
+      const owned = knownGroupTitles();
+      if (!owned.has(currentGroup.title)) return; // manual group, hands off
+      if (currentGroup.title === desiredTitle) return; // already correct
+      // Else: fall through and re-group into the right slot.
+    }
 
     const groups = await chrome.tabGroups.query({ windowId: current.windowId });
     const existing = groups.find((g) => g.title === desiredTitle);
@@ -107,8 +117,11 @@ async function autoGroupTab(tab) {
 }
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (!changeInfo.url) return; // only react when the URL itself changes
-  autoGroupTab(tab);
+  // React to URL navigation, and also to load completion for tabs that
+  // never fired a url change (e.g. session restores, prerendered).
+  if (changeInfo.url || changeInfo.status === "complete") {
+    autoGroupTab(tab);
+  }
 });
 
 // ─── Stale tab tracking ───────────────────────────────────────────────────────

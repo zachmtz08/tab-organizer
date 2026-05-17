@@ -20,6 +20,8 @@ const els = {
   blockAdd: document.getElementById("btn-add-block"),
   blockList: document.getElementById("block-list"),
   blockCount: document.getElementById("block-count"),
+  activeGrid: document.getElementById("active-grid"),
+  activeCount: document.getElementById("active-count"),
 };
 
 async function loadTheme() {
@@ -258,8 +260,46 @@ els.blockInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") addBlockPattern();
 });
 
+async function getActiveGroupNames() {
+  const data = await chrome.storage.sync.get("activeGroups");
+  if (Array.isArray(data.activeGroups)) return new Set(data.activeGroups);
+  return new Set(BUILT_IN_TASKS.map((t) => t.name));
+}
+
+async function setActiveGroupNames(set) {
+  await chrome.storage.sync.set({ activeGroups: Array.from(set) });
+}
+
+async function renderActiveGrid() {
+  const active = await getActiveGroupNames();
+  els.activeGrid.innerHTML = "";
+  BUILT_IN_TASKS.forEach((task) => {
+    const isActive = active.has(task.name);
+    const tile = document.createElement("button");
+    tile.type = "button";
+    tile.className = "active-tile" + (isActive ? " selected" : "");
+    tile.dataset.color = task.color;
+    tile.title = isActive
+      ? `${task.name} — in use (tap to disable)`
+      : `Activate ${task.name}`;
+    tile.innerHTML =
+      `<span class="active-tile-emoji">${task.emoji}</span>` +
+      `<span class="active-tile-name">${task.name}</span>`;
+    tile.addEventListener("click", async () => {
+      const current = await getActiveGroupNames();
+      if (current.has(task.name)) current.delete(task.name);
+      else current.add(task.name);
+      await setActiveGroupNames(current);
+      renderActiveGrid();
+    });
+    els.activeGrid.appendChild(tile);
+  });
+  els.activeCount.textContent = `${active.size} / ${BUILT_IN_TASKS.length} active`;
+}
+
 loadTheme();
 loadAutoGroup();
 loadStaleDays();
 renderBlocklist();
+renderActiveGrid();
 render();

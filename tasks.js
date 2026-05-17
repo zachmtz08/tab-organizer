@@ -93,6 +93,82 @@ var BUILT_IN_TASKS = [
       /elevenlabs\.io/, /runway\.ml/,
     ],
   },
+  {
+    name: "Finance",
+    color: "yellow",
+    emoji: "💰",
+    patterns: [
+      /chase\.com/, /bankofamerica\.com/, /wellsfargo\.com/, /citi\.com/,
+      /usbank\.com/, /capitalone\.com/, /pnc\.com/, /americanexpress\.com/,
+      /paypal\.com/, /venmo\.com/, /cash\.app/, /zelle\.com/, /stripe\.com/,
+      /robinhood\.com/, /fidelity\.com/, /schwab\.com/, /vanguard\.com/,
+      /etrade\.com/, /tdameritrade\.com/, /coinbase\.com/, /binance\.com/,
+      /kraken\.com/, /mint\.intuit\.com/, /creditkarma\.com/, /nerdwallet\.com/,
+    ],
+  },
+  {
+    name: "Travel",
+    color: "cyan",
+    emoji: "✈️",
+    patterns: [
+      /airbnb\.com/, /booking\.com/, /expedia\.com/, /kayak\.com/,
+      /hotels\.com/, /priceline\.com/, /tripadvisor\.com/, /trivago\.com/,
+      /delta\.com/, /united\.com/, /southwest\.com/, /aa\.com/, /jetblue\.com/,
+      /alaskaair\.com/, /spirit\.com/, /frontier\.com/, /skyscanner\.com/,
+      /maps\.google\.com/, /google\.com\/maps/, /waze\.com/, /mapquest\.com/,
+      /lonelyplanet\.com/, /hopper\.com/,
+    ],
+  },
+  {
+    name: "Food",
+    color: "orange",
+    emoji: "🍔",
+    patterns: [
+      /doordash\.com/, /ubereats\.com/, /grubhub\.com/, /postmates\.com/,
+      /seamless\.com/, /caviar\.com/, /yelp\.com/, /opentable\.com/,
+      /resy\.com/, /tock\.com/, /allrecipes\.com/, /foodnetwork\.com/,
+      /bonappetit\.com/, /seriouseats\.com/, /epicurious\.com/, /tasty\.co/,
+      /instacart\.com/, /hellofresh\.com/, /blueapron\.com/, /freshly\.com/,
+    ],
+  },
+  {
+    name: "Gaming",
+    color: "purple",
+    emoji: "🎮",
+    patterns: [
+      /steamcommunity\.com/, /steampowered\.com/,
+      /epicgames\.com/, /gog\.com/, /battle\.net/, /blizzard\.com/,
+      /minecraft\.net/, /roblox\.com/, /ea\.com/, /ubisoft\.com/,
+      /playstation\.com/, /xbox\.com/, /nintendo\.com/,
+      /ign\.com/, /gamespot\.com/, /polygon\.com/, /kotaku\.com/,
+      /itch\.io/, /humblebundle\.com/, /speedrun\.com/, /chess\.com/,
+    ],
+  },
+  {
+    name: "Learning",
+    color: "blue",
+    emoji: "🎓",
+    patterns: [
+      /coursera\.org/, /udemy\.com/, /edx\.org/, /khanacademy\.org/,
+      /udacity\.com/, /codecademy\.com/, /freecodecamp\.org/, /duolingo\.com/,
+      /brilliant\.org/, /masterclass\.com/, /skillshare\.com/,
+      /pluralsight\.com/, /linkedin\.com\/learning/, /lynda\.com/,
+      /canvas\.instructure\.com/, /blackboard\.com/, /moodle/,
+    ],
+  },
+  {
+    name: "Cloud",
+    color: "grey",
+    emoji: "☁️",
+    patterns: [
+      /aws\.amazon\.com/, /console\.aws\.amazon\.com/, /signin\.aws\.amazon\.com/,
+      /cloud\.google\.com/, /console\.cloud\.google\.com/,
+      /azure\.microsoft\.com/, /portal\.azure\.com/,
+      /digitalocean\.com/, /linode\.com/, /vultr\.com/, /hetzner\.com/,
+      /cloudflare\.com/, /fastly\.com/, /ngrok\.com/,
+      /supabase\.com/, /firebase\.google\.com/, /planetscale\.com/, /neon\.tech/,
+    ],
+  },
 ];
 
 var OTHER_TASK = { name: "Other", color: "grey", emoji: "🌐" };
@@ -106,6 +182,7 @@ function normalizeGroupColor(c) {
 }
 
 var customRules = [];
+var activeGroupSet = null; // null = all active by default
 
 async function loadCustomRules() {
   const data = await chrome.storage.sync.get("customRules");
@@ -121,6 +198,19 @@ async function loadCustomRules() {
     .filter(Boolean);
 }
 
+async function loadActiveGroups() {
+  const data = await chrome.storage.sync.get("activeGroups");
+  if (Array.isArray(data.activeGroups)) {
+    activeGroupSet = new Set(data.activeGroups);
+  } else {
+    activeGroupSet = null;
+  }
+}
+
+function isBuiltInTaskActive(name) {
+  return !activeGroupSet || activeGroupSet.has(name);
+}
+
 function detectTask(tab) {
   const url = (tab.url || "").toLowerCase();
   const title = (tab.title || "").toLowerCase();
@@ -132,6 +222,7 @@ function detectTask(tab) {
   }
 
   for (const task of BUILT_IN_TASKS) {
+    if (!isBuiltInTaskActive(task.name)) continue;
     if (task.patterns.some((p) => p.test(url) || p.test(title))) {
       return task;
     }
@@ -142,6 +233,8 @@ function detectTask(tab) {
 function knownGroupTitles() {
   const titles = new Set();
   titles.add(`${OTHER_TASK.emoji} ${OTHER_TASK.name}`);
+  // Include ALL built-ins (even deactivated ones) so we can still re-evaluate
+  // tabs sitting in a now-disabled category's group.
   for (const t of BUILT_IN_TASKS) titles.add(`${t.emoji} ${t.name}`);
   for (const r of customRules) titles.add(`${r.emoji} ${r.name}`);
   return titles;

@@ -520,8 +520,9 @@ async function loadTabs() {
 }
 
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === "sync" && changes.customRules) {
-    loadCustomRules().then(render);
+  if (area !== "sync") return;
+  if (changes.customRules || changes.activeGroups) {
+    Promise.all([loadCustomRules(), loadActiveGroups()]).then(render);
   }
 });
 
@@ -677,7 +678,13 @@ async function loadStaleData() {
 }
 
 (async () => {
-  await Promise.all([loadTheme(), loadMobs(), loadCustomRules(), loadStaleData()]);
+  await Promise.all([
+    loadTheme(),
+    loadMobs(),
+    loadCustomRules(),
+    loadActiveGroups(),
+    loadStaleData(),
+  ]);
   await loadTabs();
 })();
 
