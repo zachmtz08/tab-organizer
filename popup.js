@@ -265,16 +265,13 @@ function exitStaleMode() {
 async function saveAndCloseStale() {
   const stale = allTabs.filter(isStaleTab).filter(isSaveableTab);
   if (stale.length === 0) return;
+  const groupMap = await buildGroupMap(stale[0].windowId);
   const sessions = await getSessions();
   sessions.unshift({
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     name: `Stale tabs · ${new Date().toLocaleDateString()}`,
     createdAt: Date.now(),
-    tabs: stale.map((t) => ({
-      url: t.url,
-      title: t.title || t.url,
-      favIconUrl: t.favIconUrl || null,
-    })),
+    tabs: stale.map((t) => serializeTab(t, groupMap)),
   });
   await setSessions(sessions);
   await chrome.tabs.remove(stale.map((t) => t.id));
@@ -357,17 +354,35 @@ function isSaveableTab(tab) {
   return true;
 }
 
+async function buildGroupMap(windowId) {
+  const groups = await chrome.tabGroups.query({ windowId });
+  const map = new Map();
+  for (const g of groups) {
+    map.set(g.id, { title: g.title, color: g.color });
+  }
+  return map;
+}
+
+function serializeTab(tab, groupMap) {
+  const g = tab.groupId !== -1 ? groupMap.get(tab.groupId) : null;
+  return {
+    url: tab.url,
+    title: tab.title || tab.url,
+    favIconUrl: tab.favIconUrl || null,
+    group: g ? { title: g.title, color: g.color } : null,
+  };
+}
+
 async function saveSession(name) {
   const trimmed = name.trim();
   if (!trimmed) return false;
 
-  const tabsToSave = allTabs.filter(isSaveableTab).map((t) => ({
-    url: t.url,
-    title: t.title || t.url,
-    favIconUrl: t.favIconUrl || null,
-  }));
+  const saveable = allTabs.filter(isSaveableTab);
+  if (saveable.length === 0) return false;
 
-  if (tabsToSave.length === 0) return false;
+  const windowId = saveable[0].windowId;
+  const groupMap = await buildGroupMap(windowId);
+  const tabsToSave = saveable.map((t) => serializeTab(t, groupMap));
 
   const sessions = await getSessions();
   sessions.unshift({
@@ -383,10 +398,45 @@ async function saveSession(name) {
 async function restoreSession(id) {
   const sessions = await getSessions();
   const session = sessions.find((s) => s.id === id);
-  if (!session) return;
-  await Promise.all(
+  if (!session || !session.tabs.length) return;
+
+  // Ask the background worker to pause auto-grouping while we restore so
+  // it doesn't race us into shuffling tabs around.
+  try {
+    await chrome.runtime.sendMessage({ type: "pauseAutoGroup", ms: 60000 });
+  } catch (_) {
+    /* service worker might be cold — best-effort */
+  }
+
+  const created = await Promise.all(
     session.tabs.map((t) => chrome.tabs.create({ url: t.url, active: false }))
   );
+
+  const buckets = new Map(); // groupTitle -> { color, tabIds }
+  created.forEach((tab, i) => {
+    const saved = session.tabs[i];
+    if (!saved.group || !saved.group.title) return;
+    if (!buckets.has(saved.group.title)) {
+      buckets.set(saved.group.title, { color: saved.group.color, tabIds: [] });
+    }
+    buckets.get(saved.group.title).tabIds.push(tab.id);
+  });
+
+  const winId = created[0].windowId;
+  for (const [title, { color, tabIds }] of buckets) {
+    const existing = await chrome.tabGroups.query({ windowId: winId, title });
+    let gId;
+    if (existing.length > 0) {
+      gId = await chrome.tabs.group({ groupId: existing[0].id, tabIds });
+    } else {
+      gId = await chrome.tabs.group({ tabIds });
+      await chrome.tabGroups.update(gId, {
+        title,
+        color: normalizeGroupColor(color || "grey"),
+        collapsed: false,
+      });
+    }
+  }
 }
 
 async function deleteSession(id) {

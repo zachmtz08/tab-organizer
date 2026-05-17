@@ -10,6 +10,16 @@ const BADGE_ALARM = "stale-badge-refresh";
 let rulesLoaded = false;
 let autoGroupCache = null;
 let staleDaysCache = null;
+let autoGroupPausedUntil = 0;
+
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg && msg.type === "pauseAutoGroup") {
+    const ms = typeof msg.ms === "number" && msg.ms > 0 ? msg.ms : 30000;
+    autoGroupPausedUntil = Math.max(autoGroupPausedUntil, Date.now() + ms);
+    sendResponse({ ok: true, until: autoGroupPausedUntil });
+    return; // synchronous response
+  }
+});
 
 async function ensureRulesLoaded() {
   if (!rulesLoaded) {
@@ -69,6 +79,7 @@ function isAutoGroupableTab(tab) {
 }
 
 async function autoGroupTab(tab) {
+  if (Date.now() < autoGroupPausedUntil) return;
   if (!(await getAutoGroupEnabled())) return;
   if (!isAutoGroupableTab(tab)) return;
 
