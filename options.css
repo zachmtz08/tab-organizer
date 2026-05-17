@@ -406,6 +406,7 @@ button:hover {
 /* Toggle switch */
 .toggle-label {
   display: flex;
+  flex-direction: row;
   align-items: flex-start;
   justify-content: space-between;
   gap: 20px;
@@ -469,6 +470,7 @@ button:hover {
 
 .number-label {
   display: flex;
+  flex-direction: row;
   align-items: flex-start;
   justify-content: space-between;
   gap: 20px;

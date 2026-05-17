@@ -137,10 +137,20 @@
     el.addEventListener("dragstart", (e) => e.preventDefault());
   }
 
+  let danceEnterTimer = null;
+
   function stopDance() {
     if (danceRaf !== null) cancelAnimationFrame(danceRaf);
     danceRaf = null;
-    if (host) host.classList.remove("tabsorg-dance");
+    if (danceEnterTimer !== null) {
+      clearTimeout(danceEnterTimer);
+      danceEnterTimer = null;
+    }
+    if (host) {
+      host.classList.remove("tabsorg-dance");
+      host.classList.remove("tabsorg-dance-entering");
+      host.classList.remove("tabsorg-dance-live");
+    }
     danceMobs.forEach((m) => {
       m.el.style.transform = "";
       m.el.style.left = "";
@@ -152,6 +162,7 @@
   function startDance() {
     if (!host) return;
     host.classList.add("tabsorg-dance");
+    host.classList.add("tabsorg-dance-entering");
     const mobs = Array.from(host.querySelectorAll(".tabsorg-mob"));
     const W = window.innerWidth;
     const H = window.innerHeight;
@@ -159,10 +170,17 @@
     danceMobs = mobs.map((el) => {
       const angle = Math.random() * Math.PI * 2;
       const speed = 260 + Math.random() * 260;
+      const targetX = Math.random() * (W - SIZE);
+      const targetY = Math.random() * (H - SIZE - 60);
+      el.style.left = "0";
+      el.style.top = "0";
+      requestAnimationFrame(() => {
+        el.style.transform = `translate(${targetX}px, ${targetY}px) rotate(${Math.random() * 720 - 360}deg)`;
+      });
       return {
         el,
-        x: Math.random() * (W - SIZE),
-        y: Math.random() * (H - SIZE - 60),
+        x: targetX,
+        y: targetY,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
         rot: Math.random() * 360,
@@ -170,8 +188,14 @@
         nextKick: 0,
       };
     });
-    danceLastT = performance.now();
-    danceRaf = requestAnimationFrame(danceTick);
+    danceEnterTimer = setTimeout(() => {
+      if (!host) return;
+      host.classList.remove("tabsorg-dance-entering");
+      host.classList.add("tabsorg-dance-live");
+      danceLastT = performance.now();
+      danceRaf = requestAnimationFrame(danceTick);
+      danceEnterTimer = null;
+    }, 620);
   }
 
   function danceTick(now) {
