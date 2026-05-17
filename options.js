@@ -7,6 +7,7 @@ const COLORS = ["blue", "cyan", "green", "yellow", "orange", "red", "pink", "pur
 const els = {
   pattern: document.getElementById("pattern"),
   ruleGroup: document.getElementById("rule-group"),
+  ruleRegex: document.getElementById("rule-regex"),
   add: document.getElementById("add"),
   error: document.getElementById("error"),
   list: document.getElementById("rules-list"),
@@ -73,6 +74,7 @@ function clearError() {
 
 function clearForm() {
   els.pattern.value = "";
+  els.ruleRegex.checked = false;
   els.pattern.focus();
 }
 
@@ -261,6 +263,15 @@ function makeRuleEl(rule, customGroupsList) {
   const pattern = document.createElement("code");
   pattern.className = "rule-pattern";
   pattern.textContent = rule.pattern;
+  // Legacy rules without an explicit `match` were always regex — show that
+  // so users can spot ones that may need to be re-added in "contains" mode.
+  const mode = rule.match === "contains" ? "contains" : "regex";
+  if (mode === "regex") {
+    const badge = document.createElement("span");
+    badge.className = "rule-mode-badge";
+    badge.textContent = "regex";
+    pattern.appendChild(badge);
+  }
 
   const del = document.createElement("button");
   del.className = "del";
@@ -301,14 +312,17 @@ async function addRule() {
   clearError();
   const pattern = els.pattern.value.trim();
   const groupName = els.ruleGroup.value;
+  const useRegex = els.ruleRegex.checked;
 
   if (!pattern) return showError("Pattern is required.");
   if (!groupName) return showError("Pick a category.");
 
-  try {
-    new RegExp(pattern, "i");
-  } catch (e) {
-    return showError(`Invalid regex: ${e.message}`);
+  if (useRegex) {
+    try {
+      new RegExp(pattern, "i");
+    } catch (e) {
+      return showError(`Invalid regex: ${e.message}`);
+    }
   }
 
   const rules = await getRules();
@@ -316,6 +330,7 @@ async function addRule() {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     pattern,
     groupName,
+    match: useRegex ? "regex" : "contains",
   });
   await setRules(rules);
   clearForm();

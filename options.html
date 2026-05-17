@@ -21,8 +21,10 @@
       <p>
         Add your own URL or page-title patterns and Tab Organizer will bucket those
         tabs into the category you choose. Custom rules are checked <strong>before</strong>
-        the built-in ones, so you can override them. Patterns use JavaScript regular
-        expressions, matched case-insensitively.
+        the built-in ones, so you can override them. By default, a pattern matches if
+        a tab's URL or title <em>contains</em> the text you enter (case-insensitive) —
+        just type something short like <code>youtube.com</code>. Need full regex?
+        Tick the "regular expression" box when adding the rule.
       </p>
     </section>
 
@@ -122,13 +124,17 @@
       <div class="form-grid rule-form-grid">
         <label>
           Pattern
-          <input id="pattern" type="text" autocomplete="off" spellcheck="false" placeholder="e.g. internal\.mycompany\.com" />
+          <input id="pattern" type="text" autocomplete="off" spellcheck="false" placeholder="e.g. youtube.com" />
         </label>
         <label>
           Category
           <select id="rule-group"></select>
         </label>
       </div>
+      <label class="rule-mode-toggle">
+        <input type="checkbox" id="rule-regex" />
+        <span>Pattern is a regular expression <em class="muted">(advanced)</em></span>
+      </label>
       <div class="actions">
         <button id="add">Add rule</button>
       </div>

@@ -190,13 +190,28 @@ async function loadCustomRules() {
   const raw = Array.isArray(data.customRules) ? data.customRules : [];
   customRules = raw
     .map((r) => {
-      try {
-        return { ...r, regex: new RegExp(r.pattern, "i") };
-      } catch {
-        return null;
+      // Rules created before the match-mode toggle existed are stored without
+      // a `match` field and were always treated as regex — keep that behavior
+      // so we don't silently change matching for anyone's existing rules.
+      const mode = r.match === "contains" ? "contains" : "regex";
+      if (mode === "regex") {
+        try {
+          return { ...r, mode, regex: new RegExp(r.pattern, "i") };
+        } catch {
+          return null;
+        }
       }
+      return { ...r, mode, needle: (r.pattern || "").toLowerCase() };
     })
     .filter(Boolean);
+}
+
+function ruleMatches(rule, url, title) {
+  if (rule.mode === "contains") {
+    if (!rule.needle) return false;
+    return url.includes(rule.needle) || title.includes(rule.needle);
+  }
+  return rule.regex.test(url) || rule.regex.test(title);
 }
 
 async function loadCustomGroups() {
@@ -236,7 +251,7 @@ function detectTask(tab) {
   const title = (tab.title || "").toLowerCase();
 
   for (const rule of customRules) {
-    if (!(rule.regex.test(url) || rule.regex.test(title))) continue;
+    if (!ruleMatches(rule, url, title)) continue;
     // Skip rules whose target group has been turned off — let detection
     // fall through to subsequent rules or built-ins.
     if (rule.groupName && !isGroupActive(rule.groupName)) continue;
