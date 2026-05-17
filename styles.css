@@ -735,6 +735,56 @@ button.active {
   letter-spacing: 0.5px;
 }
 
+.dance-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 16px;
+  padding: 10px 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  color: var(--text-soft);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.dance-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-strong);
+  border-color: var(--accent);
+}
+
+.dance-btn .dance-ball {
+  font-size: 16px;
+  display: inline-block;
+}
+
+.dance-btn.active {
+  background: linear-gradient(45deg, #f472b6, #c084fc, #60a5fa, #34d399);
+  background-size: 300% 300%;
+  border-color: transparent;
+  color: #fff;
+  animation: dance-btn-shimmer 1.6s linear infinite;
+}
+
+.dance-btn.active .dance-ball {
+  animation: dance-btn-spin 0.7s linear infinite;
+}
+
+@keyframes dance-btn-shimmer {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
+}
+
+@keyframes dance-btn-spin {
+  to { transform: rotate(360deg); }
+}
+
 .mob {
   width: 36px;
   height: 42px;

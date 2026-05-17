@@ -18,6 +18,7 @@ const btnSaveCancel = document.getElementById("btn-save-cancel");
 const btnSettings = document.getElementById("btn-settings");
 const btnTheme = document.getElementById("btn-theme");
 const btnParty = document.getElementById("btn-party");
+const btnDance = document.getElementById("btn-dance");
 const mobPicker = document.getElementById("mob-picker");
 const mobGrid = document.getElementById("mob-grid");
 const pickerCountEl = document.getElementById("picker-count");
@@ -584,10 +585,22 @@ btnTheme.addEventListener("click", async () => {
 });
 
 async function loadMobs() {
-  const data = await chrome.storage.sync.get("selectedMobs");
+  const data = await chrome.storage.sync.get(["selectedMobs", "danceMode"]);
   selectedMobs = Array.isArray(data.selectedMobs) ? data.selectedMobs : [];
+  applyDanceUi(!!data.danceMode);
   renderMobGrid();
 }
+
+function applyDanceUi(on) {
+  btnDance.classList.toggle("active", on);
+  btnDance.querySelector(".dance-label").textContent = on ? "Stop the chaos" : "Dance Mode";
+}
+
+btnDance.addEventListener("click", async () => {
+  const next = !btnDance.classList.contains("active");
+  applyDanceUi(next);
+  await chrome.storage.sync.set({ danceMode: next });
+});
 
 function renderMobGrid() {
   mobGrid.innerHTML = "";
@@ -598,7 +611,7 @@ function renderMobGrid() {
     tile.className = "mob-tile" + (isSelected ? " selected" : "");
     tile.dataset.id = mob.id;
     tile.title = isSelected
-      ? `${mob.name} — in use on google.com (tap to remove)`
+      ? `${mob.name} — in use (tap to remove)`
       : `Pick ${mob.name}`;
     tile.innerHTML =
       `<div class="mob mob-${mob.id}">${mobSVG(mob)}</div>` +
@@ -669,10 +682,14 @@ async function loadStaleData() {
 })();
 
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === "sync" && changes.selectedMobs) {
+  if (area !== "sync") return;
+  if (changes.selectedMobs) {
     selectedMobs = Array.isArray(changes.selectedMobs.newValue)
       ? changes.selectedMobs.newValue
       : [];
     renderMobGrid();
+  }
+  if (changes.danceMode) {
+    applyDanceUi(!!changes.danceMode.newValue);
   }
 });

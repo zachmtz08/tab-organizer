@@ -139,5 +139,5 @@ const MOBS = [
 const MAX_MOBS = 8;
 
 function mobSVG(mob) {
-  return `<svg viewBox="${mob.viewBox}" shape-rendering="crispEdges" aria-hidden="true">${mob.body}</svg>`;
+  return `<svg viewBox="${mob.viewBox}" preserveAspectRatio="xMidYMax meet" shape-rendering="crispEdges" aria-hidden="true">${mob.body}</svg>`;
 }

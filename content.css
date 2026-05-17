@@ -3,12 +3,12 @@
   bottom: 0 !important;
   left: 0 !important;
   right: 0 !important;
-  height: 64px !important;
+  height: 56px !important;
   display: flex !important;
   justify-content: center !important;
   align-items: flex-end !important;
   gap: 24px !important;
-  padding-bottom: 6px !important;
+  padding-bottom: 0 !important;
   z-index: 2147483647 !important;
   pointer-events: none !important;
   background: transparent !important;
@@ -36,6 +36,25 @@
 
 .tabsorg-mob.tabsorg-dragging svg {
   animation-play-state: paused !important;
+}
+
+.tabsorg-mob-host.tabsorg-dance {
+  top: 0 !important;
+  height: 100vh !important;
+  display: block !important;
+  padding: 0 !important;
+}
+
+.tabsorg-mob-host.tabsorg-dance .tabsorg-mob {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  cursor: default !important;
+  filter: drop-shadow(0 0 6px rgba(244, 114, 182, 0.6)) !important;
+}
+
+.tabsorg-mob-host.tabsorg-dance .tabsorg-mob svg {
+  animation-duration: 0.3s !important;
 }
 
 .tabsorg-mob svg {

@@ -16,8 +16,10 @@ const els = {
   autoGroup: document.getElementById("auto-group"),
   staleDays: document.getElementById("stale-days"),
   theme: document.getElementById("btn-theme-options"),
-  mobBlocklist: document.getElementById("mob-blocklist"),
-  saveBlocklist: document.getElementById("btn-save-blocklist"),
+  blockInput: document.getElementById("block-input"),
+  blockAdd: document.getElementById("btn-add-block"),
+  blockList: document.getElementById("block-list"),
+  blockCount: document.getElementById("block-count"),
 };
 
 async function loadTheme() {
@@ -184,26 +186,80 @@ els.add.addEventListener("click", addRule);
   });
 });
 
-async function loadBlocklist() {
+async function getBlocklist() {
   const data = await chrome.storage.sync.get("mobBlocklist");
-  const list = Array.isArray(data.mobBlocklist) ? data.mobBlocklist : [];
-  els.mobBlocklist.value = list.join("\n");
+  return Array.isArray(data.mobBlocklist) ? data.mobBlocklist : [];
 }
 
-async function saveBlocklist() {
-  const lines = els.mobBlocklist.value
-    .split(/\r?\n/)
-    .map((s) => s.trim())
-    .filter(Boolean);
-  await chrome.storage.sync.set({ mobBlocklist: lines });
-  els.saveBlocklist.textContent = "Saved";
-  setTimeout(() => (els.saveBlocklist.textContent = "Save blocklist"), 1200);
+async function setBlocklist(list) {
+  await chrome.storage.sync.set({ mobBlocklist: list });
 }
 
-els.saveBlocklist.addEventListener("click", saveBlocklist);
+function makeBlockEl(pattern, onDelete) {
+  const row = document.createElement("div");
+  row.className = "block-item";
+
+  const code = document.createElement("code");
+  code.className = "block-pattern";
+  code.textContent = pattern;
+
+  const del = document.createElement("button");
+  del.className = "del";
+  del.textContent = "Remove";
+  del.addEventListener("click", onDelete);
+
+  row.appendChild(code);
+  row.appendChild(del);
+  return row;
+}
+
+async function renderBlocklist() {
+  const list = await getBlocklist();
+  els.blockCount.textContent = `${list.length} ${list.length === 1 ? "site" : "sites"}`;
+  els.blockList.innerHTML = "";
+
+  if (list.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "block-empty";
+    empty.textContent = "Nothing blocked. Buddies appear everywhere.";
+    els.blockList.appendChild(empty);
+    return;
+  }
+
+  list.forEach((pattern, idx) => {
+    els.blockList.appendChild(
+      makeBlockEl(pattern, async () => {
+        const current = await getBlocklist();
+        current.splice(idx, 1);
+        await setBlocklist(current);
+        renderBlocklist();
+      })
+    );
+  });
+}
+
+async function addBlockPattern() {
+  const value = els.blockInput.value.trim();
+  if (!value) return;
+  const list = await getBlocklist();
+  if (list.includes(value)) {
+    els.blockInput.value = "";
+    return;
+  }
+  list.push(value);
+  await setBlocklist(list);
+  els.blockInput.value = "";
+  els.blockInput.focus();
+  renderBlocklist();
+}
+
+els.blockAdd.addEventListener("click", addBlockPattern);
+els.blockInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") addBlockPattern();
+});
 
 loadTheme();
 loadAutoGroup();
 loadStaleDays();
-loadBlocklist();
+renderBlocklist();
 render();

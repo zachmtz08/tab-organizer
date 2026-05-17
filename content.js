@@ -3,18 +3,32 @@
   let host = null;
   let selected = [];
   let blocklist = [];
+  let danceMode = false;
+  let danceRaf = null;
+  let danceLastT = 0;
+  let danceMobs = [];
 
-  function matchesPattern(hostname, pattern) {
+  function matchesPattern(pattern, hostname, url) {
     if (!pattern) return false;
-    const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*");
-    const re = new RegExp("^" + escaped + "$", "i");
-    return re.test(hostname);
+    const p = pattern.toLowerCase().trim();
+    if (!p) return false;
+    if (p.includes("*")) {
+      const escaped = p
+        .replace(/[.+?^${}()|[\]\\]/g, "\\$&")
+        .replace(/\\\*/g, ".*");
+      const re = new RegExp("^" + escaped + "$", "i");
+      return re.test(hostname) || re.test(url);
+    }
+    if (hostname === p) return true;
+    if (hostname.endsWith("." + p)) return true;
+    return url.toLowerCase().includes(p);
   }
 
   function isBlocked() {
     if (!blocklist.length) return false;
-    const hostname = location.hostname;
-    return blocklist.some((p) => matchesPattern(hostname, p));
+    const hostname = location.hostname.toLowerCase();
+    const url = location.href;
+    return blocklist.some((p) => matchesPattern(p, hostname, url));
   }
 
   function ensureHost() {
@@ -36,8 +50,6 @@
     let dragX = 0;
     let dragY = 0;
     let vy = 0;
-    let lastX = 0;
-    let lastY = 0;
     let startMouseX = 0;
     let startMouseY = 0;
     let startDragX = 0;
@@ -86,14 +98,13 @@
     }
 
     function onPointerDown(e) {
+      if (danceMode) return;
       stopFall();
       isDragging = true;
       startMouseX = e.clientX;
       startMouseY = e.clientY;
       startDragX = dragX;
       startDragY = dragY;
-      lastX = e.clientX;
-      lastY = e.clientY;
       el.classList.add("tabsorg-dragging");
       try {
         el.setPointerCapture(e.pointerId);
@@ -105,8 +116,6 @@
       if (!isDragging) return;
       dragX = startDragX + (e.clientX - startMouseX);
       dragY = Math.min(0, startDragY + (e.clientY - startMouseY));
-      lastX = e.clientX;
-      lastY = e.clientY;
       apply();
     }
 
@@ -128,7 +137,82 @@
     el.addEventListener("dragstart", (e) => e.preventDefault());
   }
 
+  function stopDance() {
+    if (danceRaf !== null) cancelAnimationFrame(danceRaf);
+    danceRaf = null;
+    if (host) host.classList.remove("tabsorg-dance");
+    danceMobs.forEach((m) => {
+      m.el.style.transform = "";
+      m.el.style.left = "";
+      m.el.style.top = "";
+    });
+    danceMobs = [];
+  }
+
+  function startDance() {
+    if (!host) return;
+    host.classList.add("tabsorg-dance");
+    const mobs = Array.from(host.querySelectorAll(".tabsorg-mob"));
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+    const SIZE = 40;
+    danceMobs = mobs.map((el) => {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 260 + Math.random() * 260;
+      return {
+        el,
+        x: Math.random() * (W - SIZE),
+        y: Math.random() * (H - SIZE - 60),
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        rot: Math.random() * 360,
+        rotV: (Math.random() - 0.5) * 900,
+        nextKick: 0,
+      };
+    });
+    danceLastT = performance.now();
+    danceRaf = requestAnimationFrame(danceTick);
+  }
+
+  function danceTick(now) {
+    const dt = Math.min((now - danceLastT) / 1000, 0.05);
+    danceLastT = now;
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+    const SIZE = 40;
+    danceMobs.forEach((m) => {
+      m.x += m.vx * dt;
+      m.y += m.vy * dt;
+      m.rot += m.rotV * dt;
+      if (m.x < 0) { m.x = 0; m.vx = Math.abs(m.vx); m.rotV = -m.rotV; }
+      if (m.x > W - SIZE) { m.x = W - SIZE; m.vx = -Math.abs(m.vx); m.rotV = -m.rotV; }
+      if (m.y < 0) { m.y = 0; m.vy = Math.abs(m.vy); }
+      if (m.y > H - SIZE) { m.y = H - SIZE; m.vy = -Math.abs(m.vy); }
+      m.nextKick -= dt;
+      if (m.nextKick <= 0) {
+        m.vx += (Math.random() - 0.5) * 180;
+        m.vy += (Math.random() - 0.5) * 180;
+        m.rotV = (Math.random() - 0.5) * 900;
+        m.nextKick = 0.6 + Math.random() * 1.2;
+      }
+      m.el.style.left = "0";
+      m.el.style.top = "0";
+      m.el.style.transform = `translate(${m.x}px, ${m.y}px) rotate(${m.rot}deg)`;
+    });
+    danceRaf = requestAnimationFrame(danceTick);
+  }
+
+  function applyDance() {
+    if (danceMode && selected.length && !isBlocked() && host) {
+      stopDance();
+      startDance();
+    } else {
+      stopDance();
+    }
+  }
+
   function render() {
+    stopDance();
     if (!selected.length || isBlocked()) {
       clearHost();
       return;
@@ -145,31 +229,46 @@
       makeDraggable(wrap);
       root.appendChild(wrap);
     });
+    applyDance();
   }
 
   async function load() {
-    const data = await chrome.storage.sync.get(["selectedMobs", "mobBlocklist"]);
+    const data = await chrome.storage.sync.get(["selectedMobs", "mobBlocklist", "danceMode"]);
     selected = Array.isArray(data.selectedMobs) ? data.selectedMobs : [];
     blocklist = Array.isArray(data.mobBlocklist) ? data.mobBlocklist : [];
+    danceMode = !!data.danceMode;
     render();
   }
 
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== "sync") return;
-    let dirty = false;
+    let rerender = false;
+    let danceOnly = false;
     if (changes.selectedMobs) {
       selected = Array.isArray(changes.selectedMobs.newValue)
         ? changes.selectedMobs.newValue
         : [];
-      dirty = true;
+      rerender = true;
     }
     if (changes.mobBlocklist) {
       blocklist = Array.isArray(changes.mobBlocklist.newValue)
         ? changes.mobBlocklist.newValue
         : [];
-      dirty = true;
+      rerender = true;
     }
-    if (dirty) render();
+    if (changes.danceMode) {
+      danceMode = !!changes.danceMode.newValue;
+      danceOnly = true;
+    }
+    if (rerender) render();
+    else if (danceOnly) applyDance();
+  });
+
+  window.addEventListener("resize", () => {
+    if (danceMode) {
+      stopDance();
+      startDance();
+    }
   });
 
   load();
