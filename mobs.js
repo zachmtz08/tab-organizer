@@ -144,6 +144,28 @@ const MOBS = [
       <rect x="6" y="9" width="1" height="3" fill="#f1f5f9"/>
     `,
   },
+  {
+    id: "mushroom",
+    name: "Mushroom",
+    viewBox: "0 0 10 12",
+    body: `
+      <rect x="3" y="0" width="4" height="1" fill="#dc2626"/>
+      <rect x="2" y="1" width="6" height="1" fill="#dc2626"/>
+      <rect x="1" y="2" width="8" height="1" fill="#dc2626"/>
+      <rect x="0" y="3" width="10" height="2" fill="#dc2626"/>
+      <rect x="2" y="3" width="1" height="1" fill="#ffffff"/>
+      <rect x="5" y="3" width="1" height="1" fill="#ffffff"/>
+      <rect x="8" y="3" width="1" height="1" fill="#ffffff"/>
+      <rect x="3" y="4" width="1" height="1" fill="#ffffff"/>
+      <rect x="7" y="4" width="1" height="1" fill="#ffffff"/>
+      <rect x="1" y="5" width="8" height="1" fill="#991b1b"/>
+      <rect x="3" y="6" width="4" height="5" fill="#fef3c7"/>
+      <rect x="4" y="7" width="1" height="1" fill="#0c0c0c"/>
+      <rect x="6" y="7" width="1" height="1" fill="#0c0c0c"/>
+      <rect x="4" y="9" width="2" height="1" fill="#0c0c0c"/>
+      <rect x="2" y="11" width="6" height="1" fill="#15803d"/>
+    `,
+  },
 ];
 
 const MAX_MOBS = 8;
